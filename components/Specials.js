@@ -77,8 +77,8 @@ export default function Specials() {
           className="text-center"
           style={{ marginBottom: '4rem', transformStyle: 'preserve-3d' }}
         >
-          <h2 className="script-font text-primary" style={{ fontSize: 'clamp(3.5rem, 6vw, 5rem)', marginBottom: '1rem', transform: 'translateZ(50px)' }}>Daily Specials</h2>
-          <p className="text-gray" style={{ maxWidth: '600px', margin: '0 auto', transform: 'translateZ(20px)' }}>Every day is a fiesta at Buenos Mexican. Check out what we're serving up today!</p>
+          <h2 className="script-font" style={{ fontSize: 'clamp(3.5rem, 6vw, 5rem)', marginBottom: '1rem', transform: 'translateZ(50px)' }}>Daily Specials</h2>
+          <p className="text-gray" style={{ maxWidth: '600px', margin: '0 auto', transform: 'translateZ(20px)' }}>Every day is a fiesta at Buenos Mexican Cuisine. Check out what we're serving up today!</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md-grid-cols-2 lg-grid-cols-3 gap-6" style={{ perspective: 1500 }}>

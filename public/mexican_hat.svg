@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Hat Brim -->
+  <ellipse cx="50" cy="75" rx="48" ry="12" fill="#E6B325" stroke="#3E2723" stroke-width="2"/>
+  <!-- Hat Top -->
+  <path d="M 25 75 Q 25 25 50 25 Q 75 25 75 75" fill="#E6B325" stroke="#3E2723" stroke-width="2"/>
+  <!-- Decorative Band (Red) -->
+  <path d="M 28 65 Q 50 65 72 65" fill="none" stroke="#8B1C1C" stroke-width="4"/>
+  <!-- Decorative Band (Green) -->
+  <path d="M 30 55 Q 50 55 70 55" fill="none" stroke="#33691E" stroke-width="2"/>
+</svg>

@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, useScroll, useTransform } from 'framer-motion';
+import Image from 'next/image';
 import { useRef } from 'react';
 
 export default function Hero() {
@@ -16,7 +17,7 @@ export default function Hero() {
   const yText = useTransform(scrollYProgress, [0, 1], ['0vh', '-20vh']);
 
   return (
-    <section id="home" ref={container} className="relative min-h-screen flex flex-col items-center justify-center pb-32 pt-24" style={{ perspective: '1200px', transformStyle: 'preserve-3d', overflow: 'hidden' }}>
+    <section id="home" ref={container} className="relative min-h-screen flex flex-col items-center justify-center pb-32 pt-40" style={{ position: 'relative', perspective: '1200px', transformStyle: 'preserve-3d', overflow: 'hidden' }}>
 
       <motion.div 
         className="z-10 flex flex-col items-center text-center container" 
@@ -30,21 +31,32 @@ export default function Hero() {
           transformStyle: 'preserve-3d'
         }}
       >
-        
-        <motion.div
-          initial={{ scale: 0, rotate: -180, z: 200 }}
-          animate={{ scale: 1, rotate: 0, z: 0 }}
-          transition={{ duration: 1.5, type: "spring", bounce: 0.6 }}
-          style={{ marginBottom: '2rem' }}
+        <motion.div 
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.8, delay: 0.8, type: "spring" }}
+          style={{ marginBottom: '2rem', transform: 'translateZ(100px)' }}
         >
-          <img src="/smiley_logo.svg" alt="Buenos Mexican Logo" width="150" height="150" style={{ filter: 'drop-shadow(0px 0px 15px rgba(0,0,0,0.5))', borderRadius: '50%', clipPath: 'circle(50% at 50% 50%)' }} />
+          <Image 
+            src="/mexican_hat.svg" 
+            alt="Buenos Mexican Sombrero Icon" 
+            width={120} 
+            height={120}
+            priority
+          />
         </motion.div>
 
         <motion.h1 
-          className="hero-title font-bold uppercase text-white"
-          style={{ marginBottom: '1.5rem', textShadow: '0px 10px 30px rgba(0,0,0,0.9)', transform: 'translateZ(50px)' }}
+          className="hero-title font-bold uppercase"
+          style={{ 
+            fontSize: 'clamp(2.2rem, 10vw, 9rem)',
+            marginBottom: '1.5rem', 
+            transform: 'translateZ(50px)',
+            width: '100%',
+            lineHeight: 1
+          }}
         >
-          TASTE THE <br /> <span className="text-primary" style={{ textShadow: '0px 5px 20px rgba(0,0,0,0.8)' }}>DIFFERENCE</span>
+          TASTE THE <br /> <span className="neon-red">DIFFERENCE</span>
         </motion.h1>
         
         <motion.p 
@@ -54,22 +66,24 @@ export default function Hero() {
           className="text-white text-xl"
           style={{ maxWidth: '600px', marginBottom: '2.5rem', transform: 'translateZ(30px)', textShadow: '0px 4px 15px rgba(0,0,0,0.9)', fontWeight: '500' }}
         >
-          Your friendly neighbourhood authentic Mexican experience. A modern twist on classic comfort food.
+          Enjoy the best authentic Mexican food in Pattaya. We serve delicious tacos, burritos, and margaritas in the heart of Chon Buri. Visit us today!
         </motion.p>
         
         <motion.div
           initial={{ opacity: 0, y: 20, z: -50 }}
           animate={{ opacity: 1, y: 0, z: 0 }}
           transition={{ delay: 0.8, duration: 0.8 }}
-          className="flex gap-4 justify-center items-center"
+          className="flex flex-col md-flex-row gap-4 justify-center items-center w-full"
           style={{ transform: 'translateZ(60px)' }}
         >
-          <button className="primary-btn" onClick={() => document.getElementById('booking').scrollIntoView()}>
+          <button className="primary-btn" style={{ width: '90%', maxWidth: '320px' }} onClick={() => document.getElementById('booking').scrollIntoView()}>
             Reserve A Table
           </button>
-          <button className="outline-btn" style={{ backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff', borderColor: 'var(--primary)' }}>
-            Order on Grab
-          </button>
+          <a href="https://r.grab.com/o/Zn6bI3Ar" target="_blank" rel="noopener noreferrer" style={{ width: '90%', maxWidth: '320px' }}>
+            <button className="outline-btn" style={{ width: '100%', backgroundColor: 'rgba(0,0,0,0.4)', color: '#fff', borderColor: 'var(--primary)', cursor: 'pointer' }}>
+              Order on Grab
+            </button>
+          </a>
         </motion.div>
 
       </motion.div>

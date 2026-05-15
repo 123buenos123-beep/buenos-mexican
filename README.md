@@ -1,8 +1,8 @@
-# 🌮 Buenos Mexican — Authentic Mexican Dining Experience
+# 🌮 Buenos Mexican Cuisine — Authentic Mexican Dining Experience
 
-Welcome to the official source code for **Buenos Mexican**, a premium, high-performance restaurant website built with a "light vibe" rustic design, interactive 3D elements, and a fully automated booking ecosystem.
+Welcome to the official source code for **Buenos Mexican Cuisine**, a premium, high-performance restaurant website built with a "light vibe" rustic design, interactive 3D elements, and a fully automated booking ecosystem.
 
-![Buenos Mexican UI](public/images/nachos.webp)
+![Buenos Mexican Cuisine UI](public/images/nachos.webp)
 
 ## 🌟 Key Features
 
@@ -92,4 +92,4 @@ Run the local development server:
 npm run dev
 ```
 
-Built with ❤️ by the Buenos Mexican Team.
+Built with ❤️ by the Buenos Mexican Cuisine Team.

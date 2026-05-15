@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
-const FROM_EMAIL = 'Buenos Mexican <onboarding@resend.dev>';
+const FROM_EMAIL = 'Buenos Mexican Cuisine <onboarding@resend.dev>';
 
 serve(async (req) => {
   try {
@@ -35,17 +35,17 @@ serve(async (req) => {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Booking Confirmed — Buenos Mexican</title>
+        <title>Booking Confirmed — Buenos Mexican Cuisine</title>
       </head>
       <body style="margin:0;padding:0;background-color:#f4ecd8;font-family:Arial,Helvetica,sans-serif;">
         <div style="max-width:600px;margin:40px auto;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px rgba(62,39,35,0.18);">
 
           <!-- Header -->
           <div style="background-color:#3E2723;padding:36px 40px 28px;text-align:center;">
-            <div style="font-size:2.4rem;color:#ffffff;letter-spacing:3px;font-weight:900;">
-              BUENOS<span style="color:#e53935;">MEX</span>
+            <div style="font-size:1.8rem;color:#ffffff;letter-spacing:1px;font-weight:900;">
+              Buenos Mexican Cuisine
             </div>
-            <p style="color:rgba(255,255,255,0.6);margin:6px 0 0;font-size:0.78rem;letter-spacing:2px;text-transform:uppercase;">Authentic Mexican Restaurant</p>
+            <p style="color:rgba(255,255,255,0.6);margin:6px 0 0;font-size:0.78rem;letter-spacing:2px;text-transform:uppercase;">Authentic Mexican Experience</p>
           </div>
 
           <!-- Green Banner -->
@@ -61,7 +61,7 @@ serve(async (req) => {
               Hello, <strong>${name}</strong>! 🌮
             </p>
             <p style="color:#5D4037;line-height:1.75;margin:0 0 32px;font-size:0.97rem;">
-              Thank you for choosing <strong>Buenos Mexican Restaurant</strong>. Your reservation is all set — we can't wait to host you for an amazing meal!
+              Thank you for choosing <strong>Buenos Mexican Cuisine</strong>. Your reservation is all set — we can't wait to host you for an amazing meal!
             </p>
 
             <!-- Booking Details Card -->
@@ -106,14 +106,14 @@ serve(async (req) => {
 
             <p style="color:#5D4037;line-height:1.75;margin:0;font-size:0.97rem;">
               See you soon,<br>
-              <strong style="color:#3E2723;font-size:1rem;">The Buenos Mexican Team</strong> 🌶️
+              <strong style="color:#3E2723;font-size:1rem;">The Buenos Mexican Cuisine Team</strong> 🌶️
             </p>
           </div>
 
           <!-- Footer -->
           <div style="background:#f4ecd8;padding:22px 40px;text-align:center;border-top:2px dashed #795548;">
             <p style="color:#795548;font-size:0.78rem;margin:0;line-height:1.6;">
-              © 2026 Buenos Mexican Restaurant · All rights reserved<br>
+              © 2026 Buenos Mexican Cuisine · All rights reserved<br>
               <span style="opacity:0.7;">This email was sent to ${email} because you made a booking with us.</span>
             </p>
           </div>
@@ -132,7 +132,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: email,
-        subject: `✅ Booking Confirmed — ${formattedDate} at ${formattedTime} | Buenos Mexican`,
+        subject: `✅ Booking Confirmed — ${formattedDate} at ${formattedTime} | Buenos Mexican Cuisine`,
         html: emailHtml,
       }),
     });

@@ -5,158 +5,7 @@ import Navbar from '@/components/Navbar';
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { useRef } from 'react';
 
-const menuData = [
-  {
-    category: "Appetizers and Shareables",
-    subcategories: [
-      {
-        title: "Chips and Dips",
-        items: [
-          { name: "Chips and Salsa", price: "160", desc: "Our Homemade fried tortilla chips served with our signature house salsa or your choice of dips from our salsa selections", image: "/images/chips_dips.webp" },
-          { name: "Chips and Guacamole", price: "210", desc: "Crispy fried corn tortilla chips with our homemade guacamole", image: "/images/chips_dips.webp" },
-          { name: "Chips and Queso Dip", price: "195", desc: "", image: "/images/chips_dips.webp" },
-          { name: "Buenos Trio", price: "195", desc: "Chips, Queso Dip, Salsa & Guacamole", image: "/images/chips_dips.webp" },
-          { name: "Buenos Sampler", price: "180", desc: "Chips with a sampler (of our homemade salsas)", image: "/images/chips_dips.webp" },
-        ]
-      }
-    ]
-  },
-  {
-    category: "Salads",
-    description: "Fresh from the Garden, Packed with Passion – where fresh meets flavor",
-    items: [
-      { name: "Mexican Chopped Salad", price: "250-320", desc: "A vibrant mix of black beans, cherry tomatoes, bell peppers, romaine lettuce, onions, pico de gallo, and roasted corn. Served in a crispy flour tortilla bowl.\nPlain: 250 | Grilled Chicken: 275 | Grilled Steak: 290 | Shrimp: 320", image: "/images/salads.webp" },
-      { name: "Caesar Salad", price: "250-320", desc: "A classic Caesar salad with a bold Mexican twist! Served in a crispy tortilla bowl.\nPlain: 250 | Grilled Chicken: 275 | Grilled Steak: 290 | Shrimp: 320", image: "/images/salads.webp" },
-      { name: "Shrimp and Avocado Salad", price: "320", desc: "Fresh romaine lettuce tossed with tender shrimp, creamy avocado, cherry tomatoes, and red onions. Topped with crispy tortilla strips.", image: "/images/salads.webp" },
-    ]
-  },
-  {
-    category: "Nachos & Fries",
-    description: "Crispy tortilla chips or fries smothered in warm, gooey melted cheeses. Loaded with your choice of meat, jalapeños, tomatoes, and onions.",
-    items: [
-      { name: "Nachos (Various Meats)", price: "230-275", desc: "Cheese, Chicken, Carnitas, Carnie Asada, Al Pastor, Ground Beef.", image: "/images/nachos.webp" },
-      { name: "Buenos Fiesta Fries", price: "230-275", desc: "Cheese, Chicken, Carnitas, Carnie Asada, Al Pastor, Ground Beef.", image: "/images/nachos.webp" }
-    ]
-  },
-  {
-    category: "Classics",
-    subcategories: [
-      {
-        title: "Flautas (3 Per Order)",
-        items: [
-          { name: "Chicken, Carnitas, Ground Beef", price: "240", desc: "", image: "/images/flautas.webp" },
-          { name: "Carnie Asada, Al Pastor", price: "250", desc: "", image: "/images/flautas.webp" },
-          { name: "Shrimp Flautas", price: "325", desc: "", image: "/images/flautas.webp" },
-        ]
-      },
-      {
-        title: "Taquitos (4 Per Order)",
-        items: [
-          { name: "Cheese Taquitos", price: "230", desc: "", image: "/images/flautas.webp" },
-          { name: "Chicken, Carnitas, Al Pastor", price: "260", desc: "", image: "/images/flautas.webp" },
-          { name: "Carnie Asada", price: "275", desc: "", image: "/images/flautas.webp" },
-          { name: "Ground Beef", price: "250", desc: "", image: "/images/flautas.webp" },
-        ]
-      },
-      {
-        title: "Enchiladas",
-        items: [
-          { name: "Vegetable", price: "225", desc: "", image: "/images/flautas.webp" },
-          { name: "Chicken, Carnitas", price: "265", desc: "", image: "/images/flautas.webp" },
-          { name: "Al Pastor, Carne Asada", price: "275", desc: "", image: "/images/flautas.webp" },
-          { name: "Ground Beef", price: "255", desc: "", image: "/images/flautas.webp" },
-        ]
-      }
-    ]
-  },
-  {
-    category: "Burritos",
-    description: "Your choice of meats or veggies wrapped in a warm flour tortilla with mexican rice, black beans, melted cheese, and guacamole.",
-    items: [
-      { name: "Rice and Beans Burrito", price: "250", desc: "", image: "/images/burritos.webp" },
-      { name: "Chicken, Carnitas, Al Pastor, Birria", price: "265-275", desc: "", image: "/images/burritos.webp" },
-      { name: "Carnie Asada", price: "295", desc: "", image: "/images/burritos.webp" },
-      { name: "Ground Beef", price: "250", desc: "", image: "/images/burritos.webp" },
-      { name: "Roasted Vegetables", price: "255", desc: "", image: "/images/burritos.webp" },
-    ],
-    subcategories: [
-      {
-        title: "Specialty Burrito Styles",
-        items: [
-          { name: "Wet Burrito, Dorado Style, Chimichanga", price: "(+) 30", desc: "Make any burrito special.", image: "/images/burritos.webp" }
-        ]
-      }
-    ]
-  },
-  {
-    category: "Bowls & Fajitas",
-    subcategories: [
-      {
-        title: "Buenos Burrito Bowls",
-        items: [
-          { name: "Chicken, Carnitas, Al Pastor, Ground Beef", price: "250-275", desc: "", image: "/images/fajitas.webp" },
-          { name: "Carnie Asada", price: "295", desc: "", image: "/images/fajitas.webp" },
-          { name: "Fish / Shrimp", price: "275 / 375", desc: "", image: "/images/fajitas.webp" },
-        ]
-      },
-      {
-        title: "Fajitas",
-        items: [
-          { name: "Chicken / Steak", price: "295 / 325", desc: "", image: "/images/fajitas.webp" },
-          { name: "Shrimp / Vegetables", price: "375 / 275", desc: "", image: "/images/fajitas.webp" },
-        ]
-      }
-    ]
-  },
-  {
-    category: "Quesadillas & Pizzas",
-    subcategories: [
-      {
-        title: "Quesadillas",
-        items: [
-          { name: "Cheese, Chicken, Carnitas", price: "220-265", desc: "", image: "/images/quesadillas.webp" },
-          { name: "Carnie Asada, Al Pastor, Ground Beef", price: "250-275", desc: "", image: "/images/quesadillas.webp" },
-          { name: "Shrimp, Grilled Vegetables", price: "295 / 240", desc: "", image: "/images/quesadillas.webp" },
-        ]
-      },
-      {
-        title: "Mexican Pizzas (8\" / 12\")",
-        items: [
-          { name: "Chicken, Carnitas, Al Pastor", price: "230-375", desc: "", image: "/images/quesadillas.webp" },
-          { name: "Carnie Asada, Ground Beef", price: "250-385", desc: "", image: "/images/quesadillas.webp" },
-          { name: "Shrimp, Grilled Veggies", price: "220-450", desc: "", image: "/images/quesadillas.webp" },
-        ]
-      }
-    ]
-  },
-  {
-    category: "Fusion Selections",
-    items: [
-      { name: "Chili Con Carne (Tex-Mex Chili)", price: "295", desc: "Slow-simmered beef chili with tender kidney beans, fire-roasted tomatoes.", image: "/images/fusion_ramen.webp" },
-      { name: "Birria Ramen", price: "295", desc: "Tex-Mex Ramen blending rich, savory Japanese-style broth.", image: "/images/fusion_ramen.webp" },
-      { name: "Shredded Chicken / Carnitas Ramen", price: "275", desc: "Tex-Mex Ramen.", image: "/images/fusion_ramen.webp" },
-    ]
-  },
-  {
-    category: "Dulce / Desserts",
-    subcategories: [
-      {
-        title: "Churros",
-        items: [
-          { name: "Cinnamon & Sugar / Tres Sauces", price: "140 / 195", desc: "", image: "/images/churros.webp" },
-          { name: "With Chocolate / Vanilla Ice Cream", price: "175 / 210", desc: "", image: "/images/churros.webp" },
-        ]
-      },
-      {
-        title: "Other Sweets",
-        items: [
-          { name: "Mexican Spiced Chocolate Cookies", price: "210", desc: "", image: "/images/churros.webp" },
-          { name: "Caramel and Cinnamon Pastry / Flan", price: "210 / 175", desc: "", image: "/images/churros.webp" },
-        ]
-      }
-    ]
-  }
-];
+import { menuData } from '@/lib/menu-data';
 
 const ItemCard = ({ item, idx }) => {
   const x = useMotionValue(0.5);
@@ -206,11 +55,21 @@ const ItemCard = ({ item, idx }) => {
         flexDirection: 'row',
         gap: '1.5rem',
         alignItems: 'center',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        minHeight: '120px'
       }}
     >
       {item.image && (
-        <div style={{ flexShrink: 0, width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', border: `3px solid var(--border)`, boxShadow: '0 8px 20px rgba(0,0,0,0.15)', transform: 'translateZ(30px)' }}>
+        <div style={{ 
+          flexShrink: 0, 
+          width: 'clamp(60px, 15vw, 100px)', 
+          height: 'clamp(60px, 15vw, 100px)', 
+          borderRadius: '50%', 
+          overflow: 'hidden', 
+          border: `3px solid var(--border)`, 
+          boxShadow: '0 8px 20px rgba(0,0,0,0.15)', 
+          transform: 'translateZ(30px)' 
+        }}>
           <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       )}
@@ -220,7 +79,7 @@ const ItemCard = ({ item, idx }) => {
           <h3 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: '800' }}>{item.name}</h3>
           <span className="text-primary font-bold" style={{ fontSize: '1.15rem', whiteSpace: 'nowrap', transform: 'translateZ(40px)' }}>{item.price}</span>
         </div>
-        {item.desc && <p className="text-gray" style={{ lineHeight: '1.5', fontSize: '0.9rem', transform: 'translateZ(10px)' }}>{item.desc}</p>}
+        {item.desc && <p className="text-gray" style={{ lineHeight: '1.5', fontSize: '0.9rem', transform: 'translateZ(10px)', fontWeight: '500' }}>{item.desc}</p>}
       </div>
     </motion.div>
   );
@@ -233,7 +92,7 @@ export default function MenuPage() {
 
   return (
     <SmoothScroll>
-      <main className="min-h-screen" style={{ paddingTop: '100px', overflowX: 'hidden' }}>
+      <main className="min-h-screen relative" style={{ paddingTop: '100px', overflowX: 'hidden' }}>
         
         {/* Navigation */}
         <Navbar />
@@ -241,13 +100,14 @@ export default function MenuPage() {
         <header className="container text-center py-24 relative perspective-container" style={{ perspective: 1000, zIndex: 10 }}>
           <motion.div
             style={{ y: yHeader, opacity: opacityHeader, transformStyle: 'preserve-3d' }}
+            className="rustic-section-box"
           >
              <motion.h1 
                initial={{ opacity: 0, rotateX: 45, y: -50 }}
                animate={{ opacity: 1, rotateX: 0, y: 0 }}
                transition={{ duration: 1, type: "spring", bounce: 0.4 }}
-               className="script-font text-primary" 
-               style={{ fontSize: 'clamp(4rem, 8vw, 6rem)', textShadow: '2px 2px 0px rgba(255,255,255,1)', transform: 'translateZ(50px)' }}
+               className="script-font" 
+               style={{ fontSize: 'clamp(4rem, 8vw, 6rem)', transform: 'translateZ(50px)' }}
              >
                Full Menu
              </motion.h1>
@@ -256,7 +116,7 @@ export default function MenuPage() {
                animate={{ opacity: 1 }}
                transition={{ delay: 0.5 }}
                className="text-gray text-xl" 
-               style={{ marginTop: '1rem', transform: 'translateZ(20px)' }}
+               style={{ marginTop: '1rem', transform: 'translateZ(20px)', fontWeight: '500' }}
              >
                Explore our authentic Mexican dishes.
              </motion.p>
@@ -267,21 +127,22 @@ export default function MenuPage() {
           {menuData.map((section, idx) => (
             <motion.div 
               key={idx} 
+              id={section.slug}
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
-              style={{ marginBottom: '6rem' }}
+              style={{ marginBottom: '6rem', scrollMarginTop: '120px' }}
             >
               
               {/* Category Header */}
-              <div className="text-center" style={{ marginBottom: '3rem' }}>
+              <div className="rustic-section-box" style={{ textAlign: 'center', marginBottom: '3rem' }}>
                 <h2 className="rustic-section-title" style={{ fontSize: '3.5rem', margin: 0, display: 'inline-block', borderBottom: '3px dashed var(--secondary)', paddingBottom: '0.5rem' }}>{section.category}</h2>
-                {section.description && <p className="text-gray" style={{ marginTop: '1.5rem', fontSize: '1.1rem', fontStyle: 'italic', maxWidth: '700px', margin: '1.5rem auto 0 auto' }}>{section.description}</p>}
+                {section.description && <p className="text-gray" style={{ marginTop: '1.5rem', fontSize: '1.2rem', fontWeight: '500', maxWidth: '800px', margin: '1.5rem auto 0 auto', lineHeight: '1.6' }}>{section.description}</p>}
               </div>
 
               {/* Section Items Grid */}
               {section.items && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '2rem', perspective: 1200 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 400px), 1fr))', gap: '2rem', perspective: 1200 }}>
                    {section.items.map((item, i) => <ItemCard key={i} item={item} idx={i} />)}
                 </div>
               )}
@@ -289,12 +150,12 @@ export default function MenuPage() {
               {/* Subcategories */}
               {section.subcategories && section.subcategories.map((sub, sIdx) => (
                 <div key={sIdx} style={{ marginTop: section.items ? '4rem' : '1rem' }}>
-                  <div className="text-center" style={{ marginBottom: '2.5rem' }}>
-                    <h3 className="script-font text-secondary" style={{ fontSize: '2.5rem', margin: 0 }}>{sub.title}</h3>
-                    {sub.description && <p className="text-gray" style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>{sub.description}</p>}
+                  <div className="rustic-section-box" style={{ textAlign: 'center', marginBottom: '2.5rem', padding: '1.5rem' }}>
+                    <h3 className="script-font neon-red" style={{ fontSize: '2.5rem', margin: 0 }}>{sub.title}</h3>
+                    {sub.description && <p className="text-gray" style={{ marginTop: '0.75rem', fontSize: '1.1rem', fontWeight: '500', fontStyle: 'italic' }}>{sub.description}</p>}
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '2rem', perspective: 1200 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 400px), 1fr))', gap: '2rem', perspective: 1200 }}>
                      {sub.items.map((item, i) => <ItemCard key={i} item={item} idx={i} />)}
                   </div>
                 </div>
@@ -305,13 +166,25 @@ export default function MenuPage() {
         </div>
 
         {/* Footer */}
-        <footer className="text-center relative" style={{ padding: '3rem 0', backgroundColor: 'var(--background)', borderTop: '2px dashed var(--border)', zIndex: 30 }}>
-          <div className="container flex flex-col md-flex-row justify-between items-center gap-6">
-            <div className="anton-font text-foreground" style={{ fontSize: '1.875rem' }}>BUENOS<span className="text-primary">MEX</span></div>
-            <p className="text-gray" style={{ fontSize: '0.875rem' }}>© 2026 Buenos Mexican Restaurant. All rights reserved.</p>
-            <div className="flex gap-4">
-              <div className="footer-icon">FB</div>
-              <div className="footer-icon">IG</div>
+        <footer className="text-center relative" style={{ padding: '4rem 0', backgroundColor: 'var(--background)', borderTop: '2px dashed var(--border)', zIndex: 50 }}>
+          <div className="container flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="anton-font text-foreground" style={{ fontSize: '1.875rem' }}>Buenos Mexican <span className="text-primary">Restaurant</span></div>
+            
+            <p className="text-gray" style={{ fontSize: '0.875rem', fontWeight: '500' }}>© 2026 Buenos Mexican Cuisine. All rights reserved.</p>
+            
+            <div className="flex gap-6 items-center">
+              <a href="https://www.facebook.com/profile.php?id=61571573732880" target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </a>
+              <a href="https://www.instagram.com/buenosmexican?fbclid=IwY2xjawRznhRleHRuA2FlbQIxMABicmlkETFQbkZOR1hqazAxSEpCNEFNc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHs0VzzJDWjePzxFG9a_AWF5tmBH8bmLqkP2YgFiBI6ZEGTjRA7RrfVC56QOx_aem_BKVr468BcDo4txoIxBuIcg" target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+              </a>
+              <a href="https://www.tiktok.com/@buenosmexican?fbclid=IwY2xjawRznfpleHRuA2FlbQIxMABicmlkETFQbkZOR1hqazAxSEpCNEFNc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHop9ctZCrvyq4KyxuTUuHMc5wQqZKr04ypQpB8h8X0Wib7fpCS3LT8LtW9vr_aem_13NfEpKva0QHSvE7Kwt_QQ" target="_blank" rel="noopener noreferrer" className="footer-social-link">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.81-.6-4.03-1.42-.88-.65-1.59-1.47-2.11-2.42v10.17c.03 2.1-.39 4.26-1.89 5.81-1.5 1.55-3.67 2.39-5.87 2.39-2.2 0-4.37-.84-5.87-2.39-1.5-1.55-1.92-3.71-1.89-5.81.03-2.1.45-4.26 1.95-5.81 1.5-1.55 3.67-2.39 5.87-2.39.2 0 .4 0 .6.02v4.03c-.2-.02-.4-.02-.6-.02-1.1 0-2.19.42-2.94 1.19-.75.77-.96 1.85-.98 2.9-.02 1.05.19 2.13.94 2.9.75.77 1.84 1.19 2.94 1.19 1.1 0 2.19-.42 2.94-1.19.75-.77.96-1.85.98-2.9V0h.06z"/></svg>
+              </a>
+              <a href="https://r.grab.com/o/Zn6bI3Ar" target="_blank" rel="noopener noreferrer" className="footer-social-link" style={{ backgroundColor: '#00B14F', color: '#fff', borderRadius: '50px', padding: '0.4rem 1.2rem', fontSize: '0.75rem', fontWeight: '800', border: 'none', marginLeft: '0.5rem' }}>
+                ORDER ON GRAB
+              </a>
             </div>
           </div>
         </footer>

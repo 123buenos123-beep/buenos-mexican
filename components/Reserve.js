@@ -84,7 +84,7 @@ export default function Booking() {
             className="text-center"
             style={{ marginBottom: '2.5rem' }}
           >
-            <h2 className="script-font text-primary" style={{ fontSize: 'clamp(3rem, 5vw, 4.5rem)', marginBottom: '1rem' }}>Reserve A Table</h2>
+            <h2 className="script-font" style={{ fontSize: 'clamp(3rem, 5vw, 4.5rem)', marginBottom: '1rem' }}>Reserve A Table</h2>
             <p className="text-gray">Join us for an unforgettable dining experience.</p>
           </motion.div>
 
@@ -117,8 +117,9 @@ export default function Booking() {
               </div>
 
               {/* iOS Style Wheel Pickers */}
-              <div style={{ 
+              <div className="wheel-pickers-wrapper" style={{ 
                 display: 'flex', 
+                flexWrap: 'wrap',
                 gap: '1rem', 
                 background: 'rgba(0,0,0,0.2)', 
                 padding: '1.5rem', 

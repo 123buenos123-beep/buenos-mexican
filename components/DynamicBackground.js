@@ -5,10 +5,10 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 const dayBackgrounds = {
-  Monday: '/images/chips_dips.webp',
-  Tuesday: '/hero_tacos.webp',
+  Monday: '/images/rustic_hero.png',
+  Tuesday: '/images/tacos_hero.png',
   Wednesday: '/images/nachos.webp',
-  Thursday: '/hero_tacos.webp',
+  Thursday: '/images/margarita_hero.png',
   Friday: '/images/fajitas.webp',
   Saturday: '/images/burritos.webp',
   Sunday: '/images/quesadillas.webp'
@@ -33,7 +33,7 @@ export default function DynamicBackground() {
   }, []);
 
   // Default to a dark generic background before hydration finishes
-  const bgImage = currentDay ? dayBackgrounds[currentDay] : '/hero_tacos.webp';
+  const bgImage = currentDay ? dayBackgrounds[currentDay] : '/images/rustic_hero.png';
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1, backgroundColor: '#111', overflow: 'hidden' }}>
@@ -50,7 +50,7 @@ export default function DynamicBackground() {
           style={{ objectFit: 'cover' }} 
         />
         {/* Dark Overlay for Readability */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65))' }}></div>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5))' }}></div>
       </motion.div>
     </div>
   );

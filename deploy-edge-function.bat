@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM  Buenos Mexican — Supabase Deploy Script
+REM  Buenos Mexican Cuisine — Supabase Deploy Script
 REM  Run this script AFTER you have your:
 REM    1. Supabase Access Token (from dashboard.supabase.com/account/tokens)
 REM    2. Resend API Key (from resend.com)
@@ -8,12 +8,12 @@ REM ============================================================
 
 echo.
 echo ========================================================
-echo   Buenos Mexican — Supabase Deploy
+echo   Buenos Mexican Cuisine — Supabase Deploy
 echo ========================================================
 echo.
 
 REM ---- EDIT THESE TWO VALUES ----
-set SUPABASE_ACCESS_TOKEN=YOUR_SUPABASE_TOKEN_HERE
+set SUPABASE_ACCESS_TOKEN=sb_publishable_bWTs6QxY6USRl6605EBDLQ_41Zan2i-
 set RESEND_API_KEY=YOUR_RESEND_API_KEY_HERE
 REM --------------------------------
 
