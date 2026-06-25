@@ -15,12 +15,19 @@ const salsas = [
   { name: "Buenos Hotcha",        level: 4, desc: "Our fiery house hot sauce—bold chili flavor with a tangy finish. Buenos Hotcha brings the heat!", image: "/images/hotcha_centered_v2.webp" },
 ];
 
+const SPICE_LABELS = ['Mild', 'Medium', 'Hot', 'Extra Hot'];
+
 function SpiceMeter({ level }) {
   return (
-    <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+    <div
+      style={{ display: 'flex', gap: '3px', alignItems: 'center' }}
+      role="img"
+      aria-label={`Spice level: ${SPICE_LABELS[level - 1]}`}
+    >
       {[1, 2, 3, 4].map(i => (
         <span
           key={i}
+          aria-hidden="true"
           style={{
             fontSize: '0.85rem',
             lineHeight: 1,

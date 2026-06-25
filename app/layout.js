@@ -1,6 +1,7 @@
 import './globals.css';
 import DynamicBackground from '@/components/DynamicBackground';
 import ClientEffects from '@/components/ClientEffects';
+import MotionProvider from '@/components/MotionProvider';
 import { Alfa_Slab_One, Bree_Serif, Montserrat } from 'next/font/google';
 
 const alfaSlabOne = Alfa_Slab_One({ 
@@ -21,6 +22,12 @@ const montserrat = Montserrat({
   variable: '--font-montserrat'
 });
 
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export const metadata = {
   title: 'Buenos Mexican Restaurant | Best Mexican Food in Pattaya',
@@ -72,7 +79,9 @@ export default function RootLayout({ children }) {
         />
         <ClientEffects />
         <DynamicBackground />
-        {children}
+        <MotionProvider>
+          {children}
+        </MotionProvider>
       </body>
     </html>
   );
