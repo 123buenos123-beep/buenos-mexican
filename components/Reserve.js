@@ -9,6 +9,13 @@ import { User, Mail, Phone, CalendarDays, CheckCircle } from 'lucide-react';
 export default function Booking() {
   const getBangkokDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
 
+  // Timezone-safe date arithmetic — avoids toISOString() UTC shift
+  const addDays = (dateStr, n) => {
+    const [y, m, day] = dateStr.split('-').map(Number);
+    const d = new Date(y, m - 1, day + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const getBangkokNowMinutes = () => {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Bangkok', hour: 'numeric', minute: 'numeric', hour12: false,
@@ -24,9 +31,7 @@ export default function Booking() {
     // Last slot is 00:30 = 1470 min. If nothing is 60+ min away, use tomorrow.
     const hasSlots = 1470 > nowMinutes + 60;
     if (hasSlots) return { date: todayStr, time: '18:00' };
-    const base = new Date(todayStr + 'T00:00:00');
-    base.setDate(base.getDate() + 1);
-    return { date: base.toISOString().split('T')[0], time: '18:00' };
+    return { date: addDays(todayStr, 1), time: '18:00' };
   };
 
   const smartDefault = getSmartDefault();
@@ -118,13 +123,16 @@ export default function Booking() {
   const dateOptions = useMemo(() => {
     const dates = [];
     const todayStr = getBangkokDate();
-    const base = new Date(todayStr + 'T00:00:00');
-    for (let i = 0; i < 37; i++) { // extra days to fill 30 after skipping Mondays
-      const d = new Date(base);
-      d.setDate(d.getDate() + i);
+    const [y, m, day] = todayStr.split('-').map(Number);
+    for (let i = 0; dates.length < 30; i++) {
+      // new Date(y, m-1, day+i) uses local constructor — getFullYear/Month/Date
+      // return the same local values, so no UTC shift occurs.
+      const d = new Date(y, m - 1, day + i);
       if (d.getDay() === 1) continue; // 1 = Monday
-      dates.push(d.toISOString().split('T')[0]);
-      if (dates.length === 30) break;
+      const yy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      dates.push(`${yy}-${mm}-${dd}`);
     }
     return dates;
   }, []);
@@ -158,9 +166,7 @@ export default function Booking() {
   useEffect(() => {
     const todayStr = getBangkokDate();
     if (formData.date === todayStr && availableTimeOptions.length === 0) {
-      const base = new Date(todayStr + 'T00:00:00');
-      base.setDate(base.getDate() + 1);
-      setFormData(prev => ({ ...prev, date: base.toISOString().split('T')[0], time: '18:00' }));
+      setFormData(prev => ({ ...prev, date: addDays(todayStr, 1), time: '18:00' }));
     } else if (availableTimeOptions.length > 0 && !availableTimeOptions.includes(formData.time)) {
       setFormData(prev => ({ ...prev, time: availableTimeOptions[0] }));
     }

@@ -563,11 +563,6 @@ button {
   font-size: 3.5rem;
 }
 
-/* Linear Transition for Quick Menu + Salsas marquee */
-.quick-menu-swiper .swiper-wrapper,
-.salsa-swiper .swiper-wrapper {
-  transition-timing-function: linear !important;
-}
 
 /* Menu Card Styles */
 .menu-item-card {

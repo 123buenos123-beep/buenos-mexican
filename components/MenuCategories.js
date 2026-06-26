@@ -3,9 +3,9 @@
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useInView } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import Image from 'next/image';
-import { Autoplay, Navigation, Pagination, FreeMode } from 'swiper/modules';
+import { Autoplay } from 'swiper/modules';
 import { Utensils } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import { menuData } from '@/lib/menu-data';
 
@@ -54,9 +54,23 @@ function useTilt() {
   };
 }
 
+const ensureLoop = (arr, min = 12) => {
+  if (arr.length >= min) return arr;
+  const out = [];
+  while (out.length < min) out.push(...arr);
+  return out;
+};
+
 export default function MenuCategories() {
   const tilt = useTilt();
   const menuBurst = useBurst();
+  const carouselRef = useRef(null);
+  const loopedMenu = ensureLoop(menuData);
+
+  useEffect(() => {
+    const swiper = carouselRef.current;
+    if (swiper?.autoplay) swiper.autoplay.start();
+  }, []);
 
   /* ── Scroll entrance tracking ── */
   const btnRef = useRef(null);
@@ -168,37 +182,83 @@ export default function MenuCategories() {
           </div>
         </div>
 
-        <div className="quick-menu-swiper-container" style={{ padding: '20px 0' }}>
-          <Swiper
-            modules={[Autoplay, Navigation, Pagination, FreeMode]}
-            spaceBetween={30} slidesPerView={1} loop={true} freeMode={true} speed={4000}
-            autoplay={{ delay: 0, disableOnInteraction: false, pauseOnMouseEnter: true }}
-            grabCursor={true}
-            breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 4 } }}
-            style={{ paddingBottom: '50px' }} className="quick-menu-swiper"
-          >
-            {menuData.map((section, i) => (
-              <SwiperSlide key={i}>
-                <a href={`/menu#${section.slug}`} style={{ display: 'block' }}>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="menu-cat-card">
-                    <div className="menu-cat-overlay"></div>
-                    <div className="menu-cat-bg">
-                      <Image src={section.image} alt={section.category} fill style={{ objectFit: 'cover', opacity: 0.9 }} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" />
-                    </div>
-                    <div className="menu-cat-info">
-                      <h3 className="script-font" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--neon-gold)', letterSpacing: '0.5px', textShadow: '2px 2px 4px rgba(0,0,0,0.4)', marginBottom: '0.5rem', lineHeight: '1.2' }}>{section.category}</h3>
-                      <div className="flex items-center gap-2" style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--neon-gold)' }}>
-                        <span>Explore Section</span>
-                        <span style={{ fontSize: '1.1rem' }}>→</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                </a>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
       </motion.div>
+
+      {/* Swiper outside motion.div so it initialises with full dimensions */}
+      <div style={{ padding: '20px 0', position: 'relative' }}>
+        {/* Nav arrows */}
+        <button className="qm-arrow qm-arrow-prev" aria-label="Previous" onClick={() => carouselRef.current?.slidePrev(700, true)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button className="qm-arrow qm-arrow-next" aria-label="Next" onClick={() => carouselRef.current?.slideNext(700, true)}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+        <Swiper
+          modules={[Autoplay]}
+          onSwiper={(swiper) => { carouselRef.current = swiper; }}
+          spaceBetween={24}
+          slidesPerView={1.2}
+          loop={true}
+          speed={700}
+          autoplay={{ delay: 2500, disableOnInteraction: false, pauseOnMouseEnter: true }}
+          grabCursor={true}
+          breakpoints={{ 640: { slidesPerView: 2.2 }, 1024: { slidesPerView: 4 } }}
+          className="quick-menu-swiper"
+        >
+          {loopedMenu.map((section, i) => (
+            <SwiperSlide key={i}>
+              <a href={`/menu#${section.slug}`} style={{ display: 'block' }}>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="menu-cat-card">
+                  <div className="menu-cat-overlay"></div>
+                  <div className="menu-cat-bg">
+                    <Image src={section.image} alt={section.category} fill style={{ objectFit: 'cover', opacity: 0.9 }} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" />
+                  </div>
+                  <div className="menu-cat-info">
+                    <h3 className="script-font" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--neon-gold)', letterSpacing: '0.5px', textShadow: '2px 2px 4px rgba(0,0,0,0.4)', marginBottom: '0.5rem', lineHeight: '1.2' }}>{section.category}</h3>
+                    <div className="flex items-center gap-2" style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--neon-gold)' }}>
+                      <span>Explore Section</span>
+                      <span style={{ fontSize: '1.1rem' }}>→</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </a>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+
+      <style>{`
+        .qm-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 10;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: 2px solid rgba(255, 215, 0, 0.5);
+          background: rgba(30, 10, 5, 0.75);
+          backdrop-filter: blur(8px);
+          color: #FFD700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.2s, border-color 0.2s, transform 0.2s;
+        }
+        .qm-arrow:hover {
+          background: rgba(62, 39, 35, 0.95);
+          border-color: rgba(255, 215, 0, 0.9);
+          transform: translateY(-50%) scale(1.1);
+        }
+        .qm-arrow-prev { left: 12px; }
+        .qm-arrow-next { right: 12px; }
+        .qm-arrow.swiper-button-disabled {
+          opacity: 0.3;
+          cursor: default;
+        }
+      `}</style>
     </section>
   );
 }
