@@ -93,6 +93,18 @@ Deno.serve(async (req) => {
       message = "We've received your booking request! Our team will review it and confirm your table shortly.";
     }
 
+    // Customer self-service cancel link — shown on pending/confirmed emails only,
+    // never on a cancellation email. The booking UUID acts as the secret token.
+    const SITE_URL = Deno.env.get('SITE_URL') || 'https://buenosmexican.com';
+    const cancelSection = status !== 'cancelled' ? `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
+                <tr>
+                  <td align="center">
+                    <a href="${SITE_URL}/api/cancel-booking?id=${booking.id}" target="_blank" style="display:inline-block;padding:12px 30px;background:#FFFFFF;color:#8B1C1C;border:1.5px solid #E0C9A6;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0.3px;">Cancel Reservation</a>
+                  </td>
+                </tr>
+              </table>` : '';
+
     const emailHtml = `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -175,7 +187,7 @@ Deno.serve(async (req) => {
                   </tr>
                 </table>
               </div>
-
+${cancelSection}
               <p style="font-size:13px;color:#9C8577;line-height:1.6;margin:0;text-align:center;">
                 Questions? Call us or visit us at Jomtien Complex, Pattaya.
               </p>
