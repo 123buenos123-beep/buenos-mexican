@@ -149,16 +149,17 @@ ALTER TABLE public.email_logs ENABLE ROW LEVEL SECURITY;
 -- Anon gets NO direct access: public reservations are created exclusively through
 -- the create_booking() SECURITY DEFINER RPC, which runs as the function owner and
 -- bypasses RLS — so anon never touches this table directly.
-DROP POLICY IF EXISTS "Allow public inserts" ON public.bookings;
-DROP POLICY IF EXISTS "Customers can view own bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Staff can manage all bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Allow anon update bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Allow anon delete bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Allow anon select bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Allow authenticated select bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Allow authenticated update bookings" ON public.bookings;
-DROP POLICY IF EXISTS "Allow authenticated delete bookings" ON public.bookings;
-DROP POLICY IF EXISTS "bookings_open_access" ON public.bookings;
+-- Drop EVERY existing policy first (defensive: a fresh DB has none, but an
+-- existing DB may still carry legacy anon-readable policies under other names).
+DO $$
+DECLARE pol record;
+BEGIN
+  FOR pol IN SELECT policyname FROM pg_policies
+             WHERE schemaname = 'public' AND tablename = 'bookings'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.bookings', pol.policyname);
+  END LOOP;
+END $$;
 CREATE POLICY "bookings_staff_all" ON public.bookings
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
@@ -187,10 +188,16 @@ CREATE POLICY "booking_settings_write" ON public.booking_settings
 -- Staff (admin dashboard, authenticated) manage everything. Server routes that
 -- mutate subscribers (unsubscribe, email-webhook bounce handling) use the
 -- service_role key, which bypasses RLS.
-DROP POLICY IF EXISTS "Allow public to subscribe" ON public.subscribers;
-DROP POLICY IF EXISTS "Staff can manage subscribers" ON public.subscribers;
-DROP POLICY IF EXISTS "Allow anon manage subscribers" ON public.subscribers;
-DROP POLICY IF EXISTS "subscribers_open_access" ON public.subscribers;
+-- Drop EVERY existing policy first (defensive — clears any legacy policies).
+DO $$
+DECLARE pol record;
+BEGIN
+  FOR pol IN SELECT policyname FROM pg_policies
+             WHERE schemaname = 'public' AND tablename = 'subscribers'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.subscribers', pol.policyname);
+  END LOOP;
+END $$;
 CREATE POLICY "subscribers_public_signup" ON public.subscribers
   FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "subscribers_staff_all" ON public.subscribers
