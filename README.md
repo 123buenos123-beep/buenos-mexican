@@ -21,6 +21,7 @@ A production-grade restaurant reservation and management system for Buenos Mexic
   - [10. Subscribers Panel](#10-subscribers-panel)
 - [Security & Protection](#security--protection)
   - [Admin Route Protection (Proxy)](#admin-route-protection-proxy)
+  - [Data Access (Row Level Security)](#data-access-row-level-security)
   - [Cloudflare Turnstile](#cloudflare-turnstile)
   - [Honeypot Field](#honeypot-field)
   - [Rate Limiting (Two-Layer)](#rate-limiting-two-layer)
@@ -252,6 +253,46 @@ A dedicated admin tab (`components/SubscribersAdmin.js`) for viewing newsletter 
 3. `proxy.js` reads the cookie on subsequent requests and allows access.
 4. Sign out clears the cookie and proxy redirects back to `/admin/login`.
 
+> **Important:** `proxy.js` only guards the admin *pages*. The real protection for
+> the underlying data is Row Level Security (below) — the proxy is a UX/redirect
+> layer, not the data boundary.
+
+---
+
+### Data Access (Row Level Security)
+
+The Supabase anon key is public — it ships to every browser. RLS, not the anon
+key, is what actually protects customer data. Policies are defined in
+`supabase/schema.sql`.
+
+**Tables holding PII are closed to anon:**
+
+| Table | anon (public) | authenticated (staff) | service_role (server) |
+|:---|:---|:---|:---|
+| `bookings` | no direct access¹ | full (admin dashboard) | full (bypasses RLS) |
+| `subscribers` | `INSERT` only (signup) | full (admin dashboard) | full (bypasses RLS) |
+
+¹ Public reservations are created solely through the `create_booking()`
+`SECURITY DEFINER` RPC, which runs as the function owner and bypasses RLS — so
+anon never needs (or gets) direct access to the `bookings` table.
+
+**Why the admin dashboard still works with the anon key:** the browser client
+(`lib/supabase.js`) sends the logged-in user's JWT alongside the anon key, so its
+requests run as the `authenticated` role and satisfy the staff policies. A visitor
+without a session is plain `anon` and is denied.
+
+**Server routes** that need privileged writes use the `service_role` key
+(`SUPABASE_SERVICE_ROLE_KEY`), which bypasses RLS entirely: `cancel-booking`,
+`unsubscribe`, `admin/booking-settings`, and `email-webhook` (bounce handling).
+
+> **Note:** the logging tables (`booking_attempts`, `vip_signup_attempts`) remain
+> anon-accessible so the public booking route and signup modal can write to them.
+> They contain email/name and are a candidate for the same lockdown next.
+
+To apply this to an existing database, run
+`supabase/migrations/20260707120000_lock_pii_rls.sql` in the SQL Editor
+(idempotent). A fresh `schema.sql` run already includes it.
+
 ---
 
 ### Cloudflare Turnstile
@@ -351,6 +392,7 @@ Create `.env.local` in the project root:
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-jwt-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-jwt-key   # Server-only — bypasses RLS for admin/server routes. Never expose to the browser.
 
 # Cloudflare Turnstile
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key

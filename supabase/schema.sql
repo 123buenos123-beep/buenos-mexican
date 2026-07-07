@@ -143,7 +143,12 @@ ALTER TABLE public.vip_signup_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_blasts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_logs ENABLE ROW LEVEL SECURITY;
 
--- bookings: fully open to anon + authenticated (admin dashboard uses anon key)
+-- bookings: rows hold customer PII (name, email, phone). Only authenticated
+-- staff (the admin dashboard) may read/write directly. Server routes that need
+-- privileged access use the service_role key, which bypasses RLS automatically.
+-- Anon gets NO direct access: public reservations are created exclusively through
+-- the create_booking() SECURITY DEFINER RPC, which runs as the function owner and
+-- bypasses RLS — so anon never touches this table directly.
 DROP POLICY IF EXISTS "Allow public inserts" ON public.bookings;
 DROP POLICY IF EXISTS "Customers can view own bookings" ON public.bookings;
 DROP POLICY IF EXISTS "Staff can manage all bookings" ON public.bookings;
@@ -153,8 +158,9 @@ DROP POLICY IF EXISTS "Allow anon select bookings" ON public.bookings;
 DROP POLICY IF EXISTS "Allow authenticated select bookings" ON public.bookings;
 DROP POLICY IF EXISTS "Allow authenticated update bookings" ON public.bookings;
 DROP POLICY IF EXISTS "Allow authenticated delete bookings" ON public.bookings;
-CREATE POLICY "bookings_open_access" ON public.bookings
-  FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "bookings_open_access" ON public.bookings;
+CREATE POLICY "bookings_staff_all" ON public.bookings
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- tables
 DROP POLICY IF EXISTS "Tables are viewable by everyone" ON public.tables;
@@ -176,12 +182,19 @@ CREATE POLICY "booking_settings_read" ON public.booking_settings FOR SELECT USIN
 CREATE POLICY "booking_settings_write" ON public.booking_settings
   FOR UPDATE USING (auth.role() = 'service_role');
 
--- subscribers
+-- subscribers: the email list is PII. The public may only INSERT (newsletter
+-- signup via NewsletterModal) — they cannot read, update, or delete the list.
+-- Staff (admin dashboard, authenticated) manage everything. Server routes that
+-- mutate subscribers (unsubscribe, email-webhook bounce handling) use the
+-- service_role key, which bypasses RLS.
 DROP POLICY IF EXISTS "Allow public to subscribe" ON public.subscribers;
 DROP POLICY IF EXISTS "Staff can manage subscribers" ON public.subscribers;
 DROP POLICY IF EXISTS "Allow anon manage subscribers" ON public.subscribers;
-CREATE POLICY "subscribers_open_access" ON public.subscribers
-  FOR ALL TO anon, authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "subscribers_open_access" ON public.subscribers;
+CREATE POLICY "subscribers_public_signup" ON public.subscribers
+  FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY "subscribers_staff_all" ON public.subscribers
+  FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- logging tables: open access
 DROP POLICY IF EXISTS "Allow anon manage booking_attempts" ON public.booking_attempts;

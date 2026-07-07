@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Trusted server-to-server endpoint (called by Resend). It deactivates bounced
+// subscribers — a write anon RLS no longer permits — so it must use the
+// service_role key. Falls back to the anon key for local dev where it may be unset.
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // ─── Bounce Classification Helper ───────────────────────────────────
 // Returns 'hard' or 'soft' based on Resend webhook bounce payload.
@@ -67,13 +70,13 @@ export async function POST(request) {
     const resendId = eventData.email_id;
     const recipientEmail = Array.isArray(eventData.to) ? eventData.to[0] : eventData.to;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Database environment variables are missing in webhook route!');
       return NextResponse.json({ error: 'Database environment variables are not configured.' }, { status: 500 });
     }
 
-    // Initialize Supabase client
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Initialize Supabase client (service role — bypasses RLS for trusted writes)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 1. Find matching email log in the database
     const { data: logEntry, error: logFindError } = await supabase
