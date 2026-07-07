@@ -179,6 +179,26 @@ function buildEmailHtml(bodyContent, subscriberEmail, siteUrl) {
 // ─── Throttle helper: wait N ms ─────────────────────────────────────
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// ─── Send one email, retrying on Resend 429 (rate limit) ────────────
+// Resend's default limit is 2 requests/sec. The throttle below keeps us
+// under it, but if a 429 still slips through (timing jitter), back off and
+// retry instead of dropping the recipient.
+async function sendEmailWithRetry(payload, maxRetries = 3) {
+  for (let attempt = 0; ; attempt++) {
+    const result = await resend.emails.send(payload);
+    const err = result.error;
+    const rateLimited = err && (
+      err.statusCode === 429 ||
+      /rate.?limit|too many/i.test(`${err.name || ''} ${err.message || ''}`)
+    );
+    if (rateLimited && attempt < maxRetries) {
+      await delay(1000 * (attempt + 1)); // 1s, 2s, 3s backoff
+      continue;
+    }
+    return result;
+  }
+}
+
 // ─── Main Handler ───────────────────────────────────────────────────
 export async function POST(request) {
   try {
@@ -245,8 +265,8 @@ export async function POST(request) {
       }, { status: 500 });
     }
 
-    // 3. Throttled Queue — send ~5 emails/sec (200ms between each)
-    const THROTTLE_DELAY_MS = 200;    // 200ms = ~5 emails/sec
+    // 3. Throttled Queue — send ~1.6 emails/sec (600ms apart), under Resend's 2 req/sec limit
+    const THROTTLE_DELAY_MS = 600;    // Resend allows 2 req/sec; 600ms ≈ 1.6/sec stays safely under
     const DB_UPDATE_INTERVAL = 5;     // Update blast progress in DB every 5 emails
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://buenosmexicanrestaurant.com';
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'Buenos Mexican <onboarding@resend.dev>';
@@ -255,7 +275,7 @@ export async function POST(request) {
     let totalFailedCount = 0;
     const emailLogsBatch = [];        // Buffer logs to batch-insert
 
-    console.log(`[Newsletter] Starting throttled send: ${subscribers.length} subscribers @ ~5/sec`);
+    console.log(`[Newsletter] Starting throttled send: ${subscribers.length} subscribers @ ~1.6/sec (under Resend 2/sec)`);
 
     for (let i = 0; i < subscribers.length; i++) {
       const sub = subscribers[i];
@@ -264,7 +284,7 @@ export async function POST(request) {
       const fullHtml = buildEmailHtml(htmlContent, sub.email, siteUrl);
 
       try {
-        const { data: sendData, error: sendError } = await resend.emails.send({
+        const { data: sendData, error: sendError } = await sendEmailWithRetry({
           from: fromEmail,
           to: [sub.email],
           subject: subject,
