@@ -32,7 +32,7 @@ export const viewport = {
 export const metadata = {
   title: 'Buenos Mexican Restaurant | Best Mexican Food in Pattaya',
   description: 'The best Buenos Mexican Restaurant in Pattaya, serving authentic Mexican cuisine. Enjoy delicious tacos, burritos, and margaritas in the heart of Chon Buri.',
-  metadataBase: new URL('https://buenosmexican.com'),
+  metadataBase: new URL('https://buenosmexicanrestaurant.com'),
   alternates: {
     canonical: '/',
   },
@@ -47,7 +47,7 @@ export default function RootLayout({ children }) {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
     'name': 'Buenos Mexican Cuisine',
-    'image': 'https://buenosmexican.com/images/platillos.webp',
+    'image': 'https://buenosmexicanrestaurant.com/images/platillos.webp',
     'address': {
       '@type': 'PostalAddress',
       'streetAddress': 'Jomtien Complex, 413/9-10 Thappraya Rd',
@@ -56,7 +56,7 @@ export default function RootLayout({ children }) {
       'postalCode': '20150',
       'addressCountry': 'TH'
     },
-    'url': 'https://buenosmexican.com',
+    'url': 'https://buenosmexicanrestaurant.com',
     'telephone': '065 236 2316',
     'openingHoursSpecification': [
       {
@@ -66,7 +66,7 @@ export default function RootLayout({ children }) {
         'closes': '00:30'
       }
     ],
-    'menu': 'https://buenosmexican.com/menu',
+    'menu': 'https://buenosmexicanrestaurant.com/menu',
     'servesCuisine': 'Mexican'
   };
 

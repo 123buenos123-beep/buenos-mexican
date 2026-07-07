@@ -51,3 +51,9 @@ Details projects/
 
 # original image backups (large files, not for deployment)
 _image_originals/
+
+.vercel
+.env*
+
+# claude code local state
+.claude/

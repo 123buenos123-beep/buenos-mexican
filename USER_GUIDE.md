@@ -24,8 +24,8 @@ The website has two parts:
 
 | Part | URL | Who uses it |
 |---|---|---|
-| Public website | `buenosmexican.com` | Customers |
-| Admin panel | `buenosmexican.com/admin` | Restaurant staff |
+| Public website | `buenosmexicanrestaurant.com` | Customers |
+| Admin panel | `buenosmexicanrestaurant.com/admin` | Restaurant staff |
 
 **Public pages:**
 - **Homepage** — hero, menu categories, salsas, specials, reviews, booking form, location
@@ -41,15 +41,16 @@ The website has two parts:
 
 ## 2. Admin Panel Login
 
-Go to: `buenosmexican.com/admin`
+Go to: `buenosmexicanrestaurant.com/admin`
 
 You will be redirected to the login page automatically if not signed in.
 
 **Login credentials** — use the email and password set up in Supabase Auth (Dashboard → Authentication → Users).
 
-Once logged in you will see three tabs:
+Once logged in you will see four tabs:
 - **Live Bookings** — manage all reservations
 - **Newsletter** — compose and send marketing emails
+- **Subscribers** — see subscriber counts (Total / Active / Unsubscribed) and search the list
 - **System Monitor** — check integration health and logs
 
 To sign out, click **Sign out** in the top-right corner.
@@ -142,7 +143,11 @@ Subscribers who hard-bounce (invalid email address, domain doesn't exist) are **
 
 Subscribers are added when customers sign up via the VIP button on the website. They can unsubscribe at any time via the link at the bottom of every newsletter email.
 
-To view or manage subscribers directly: Supabase Dashboard → Table Editor → `subscribers`.
+To see how many subscribers you have, go to the **Subscribers** tab. It shows:
+- **Total / Active / Unsubscribed** counts (click a card to filter the list below)
+- A searchable list with each subscriber's name, email, sign-up date, and status
+
+For anything beyond viewing (e.g. manually editing a row), use Supabase Dashboard → Table Editor → `subscribers`.
 
 ---
 
@@ -227,7 +232,7 @@ Before going live, make sure these are configured in **Vercel → Settings → E
 NEXT_PUBLIC_SUPABASE_URL          = https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY     = <anon key from Supabase>
 SUPABASE_SERVICE_ROLE_KEY         = <service role key from Supabase>
-NEXT_PUBLIC_SITE_URL              = https://buenosmexican.com
+NEXT_PUBLIC_SITE_URL              = https://buenosmexicanrestaurant.com
 NEXT_PUBLIC_TURNSTILE_SITE_KEY    = <from Cloudflare Turnstile dashboard>
 TURNSTILE_SECRET_KEY              = <from Cloudflare Turnstile dashboard>
 RESEND_API_KEY                    = <from resend.com>
@@ -242,8 +247,9 @@ RESEND_API_KEY
 LINE_CHANNEL_ACCESS_TOKEN
 LINE_MANAGER_USER_ID
 GOOGLE_SHEET_WEBHOOK_URL
-SUPABASE_SERVICE_ROLE_KEY
 ```
+
+> Don't add `SUPABASE_SERVICE_ROLE_KEY` here — Supabase reserves that name and injects it (along with `SUPABASE_URL` and `SUPABASE_ANON_KEY`) into every Edge Function automatically. Trying to set it manually will be rejected.
 
 After any environment variable change in Vercel, redeploy for the changes to take effect.
 
@@ -271,7 +277,7 @@ After any environment variable change in Vercel, redeploy for the changes to tak
 - Check that the domain is added to the Turnstile site in Cloudflare dashboard
 
 ### Unsubscribe links in emails go to localhost
-- `NEXT_PUBLIC_SITE_URL` is set to `http://localhost:3000` — change it to `https://buenosmexican.com` in Vercel
+- `NEXT_PUBLIC_SITE_URL` is set to `http://localhost:3000` — change it to `https://buenosmexicanrestaurant.com` in Vercel
 
 ### Admin panel shows "Connection Lost"
 - Usually a temporary network issue — the panel reconnects automatically
@@ -283,4 +289,4 @@ After any environment variable change in Vercel, redeploy for the changes to tak
 
 ---
 
-*Buenos Mexican Restaurant — buenosmexican.com*
+*Buenos Mexican Restaurant — buenosmexicanrestaurant.com*

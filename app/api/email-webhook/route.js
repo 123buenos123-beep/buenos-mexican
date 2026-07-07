@@ -106,7 +106,6 @@ export async function POST(request) {
       bounceClassification = classifyBounce(eventData.bounce);
       newStatus = 'bounced';
       errorMessage = `[${bounceClassification.toUpperCase()} BOUNCE] ${eventData.bounce?.message || 'Email Bounced'}`;
-;
 
     } else if (eventType === 'email.failed') {
       newStatus = 'failed';

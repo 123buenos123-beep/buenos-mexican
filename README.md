@@ -18,6 +18,7 @@ A production-grade restaurant reservation and management system for Buenos Mexic
   - [7. Grab Delivery Integration](#7-grab-delivery-integration)
   - [8. Social Media & Customer Engagement](#8-social-media--customer-engagement)
   - [9. Newsletter System](#9-newsletter-system)
+  - [10. Subscribers Panel](#10-subscribers-panel)
 - [Security & Protection](#security--protection)
   - [Admin Route Protection (Proxy)](#admin-route-protection-proxy)
   - [Cloudflare Turnstile](#cloudflare-turnstile)
@@ -136,15 +137,16 @@ Three client-side filters chain together — a booking must pass all to appear:
 
 ### 4. Interactive Statistics Cards
 
-Five real-time counters in the dashboard header, computed directly from React state on every Realtime event:
+Four clickable filter cards in the Live Bookings header, computed directly from React state on every Realtime event — clicking one filters the list below to that status:
 
 | Card | Source |
 |:---|:---|
 | Total | `bookings.length` |
-| Confirmed | `.filter(b => b.status === 'confirmed').length` |
 | Pending | `.filter(b => b.status === 'pending').length` |
-| Today | `.filter(b => b.date === today).length` |
-| VIP Subscribers | `SELECT COUNT(*) FROM subscribers WHERE is_active = true` |
+| Confirmed | `.filter(b => b.status === 'confirmed').length` |
+| Cancelled | `.filter(b => b.status === 'cancelled').length` |
+
+The Subscribers tab has its own equivalent set (Total / Active / Unsubscribed) — see [10. Subscribers Panel](#10-subscribers-panel).
 
 ---
 
@@ -217,6 +219,19 @@ Full newsletter management system accessible via the admin dashboard's "Newslett
 - Resend POSTs delivery events (delivered, bounced, failed)
 - Smart bounce classification: hard bounces deactivate the subscriber; soft bounces keep them active
 - Updates `email_logs` status and `email_blasts` counters in real time
+
+---
+
+### 10. Subscribers Panel
+
+A dedicated admin tab (`components/SubscribersAdmin.js`) for viewing newsletter subscriber counts, separate from the Newsletter tab's compose/send/track workflow.
+
+- Three clickable stat cards: **Total / Active / Unsubscribed**, computed from `subscribers.is_active`
+- Search by name or email
+- List view showing name, email, subscribe date, and status badge per subscriber
+- Realtime updates via a `postgres_changes` subscription on the `subscribers` table — new signups and unsubscribes appear instantly, same pattern as the Live Bookings tab
+
+**Key files:** `components/SubscribersAdmin.js`, `app/admin/page.js`
 
 ---
 
@@ -308,8 +323,8 @@ When offline:
 - Status indicator pulses red
 
 When reconnected:
-- `fetchBookings()` and `fetchSubscribersCount()` re-sync automatically
-- Green toast: "Network restored. Data re-synced."
+- The active tab's Realtime channel resubscribes and triggers a full refetch to catch any events missed while offline
+- Green toast: "Back online — data synced"
 
 ---
 
@@ -378,9 +393,11 @@ To set up a fresh database:
 npx supabase secrets set --project-ref your-project-ref \
   RESEND_API_KEY="re_your_key" \
   LINE_CHANNEL_ACCESS_TOKEN="your_token" \
-  LINE_USER_ID="your_user_id" \
+  LINE_MANAGER_USER_ID="your_user_id" \
   GOOGLE_SHEET_WEBHOOK_URL="your_url"
 ```
+
+> **Note:** Don't try to set `SUPABASE_SERVICE_ROLE_KEY` here — Supabase reserves the `SUPABASE_` prefix and auto-injects `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_DB_URL` into every Edge Function automatically. The CLI will reject any attempt to set them manually.
 
 ---
 
@@ -390,7 +407,7 @@ npx supabase secrets set --project-ref your-project-ref \
 buenos-mexican/
 ├── app/
 │   ├── admin/
-│   │   ├── page.js               # Admin dashboard (tabs: bookings, newsletter, monitor)
+│   │   ├── page.js               # Admin dashboard (tabs: bookings, newsletter, subscribers, monitor)
 │   │   └── login/
 │   │       └── page.js           # Admin login page (protected by proxy.js)
 │   ├── api/
@@ -421,14 +438,13 @@ buenos-mexican/
 │   ├── Navbar.js                 # Responsive navigation with mobile drawer
 │   ├── NewsletterAdmin.js        # Newsletter campaign composer and campaign tracker
 │   ├── NewsletterModal.js        # VIP newsletter subscription modal
-│   ├── ParticleTrail.js          # Canvas particle physics engine
-│   ├── PremiumCursor.js          # Custom cursor with particle trail
 │   ├── Reserve.js                # Booking form (wheel pickers, Turnstile, suggestions)
 │   ├── Reviews.js                # Customer testimonials carousel
 │   ├── Salsas.js                 # Reverse-direction Swiper marquee of salsa cards
 │   ├── ScrollProgress.js         # Thin progress bar at top of viewport
 │   ├── SmoothScroll.js           # Lenis smooth scroll wrapper
 │   ├── Specials.js               # Today's specials section
+│   ├── SubscribersAdmin.js       # Admin subscriber counts (Total/Active/Unsubscribed), search, list
 │   ├── VipFooterButton.js        # Floating VIP newsletter signup button
 │   └── WheelPicker.js            # iOS-style drum picker (date / time / party size)
 ├── lib/

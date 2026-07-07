@@ -2,7 +2,7 @@
 /// <reference lib="deno.ns" />
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
-const FROM_EMAIL = 'Buenos Mexican Cuisine <onboarding@resend.dev>';
+const FROM_EMAIL = 'Buenos Mexican Cuisine <reservations@buenosmexicanrestaurant.com>';
 
 // LINE Config
 const LINE_CHANNEL_ACCESS_TOKEN = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN');
@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
 
     // Customer self-service cancel link — shown on pending/confirmed emails only,
     // never on a cancellation email. The booking UUID acts as the secret token.
-    const SITE_URL = Deno.env.get('SITE_URL') || 'https://buenosmexican.com';
+    const SITE_URL = Deno.env.get('SITE_URL') || 'https://buenosmexicanrestaurant.com';
     const cancelSection = status !== 'cancelled' ? `
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
                 <tr>

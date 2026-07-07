@@ -5,6 +5,6 @@ export default function robots() {
       allow: '/',
       disallow: '/private/',
     },
-    sitemap: 'https://buenosmexican.com/sitemap.xml',
+    sitemap: 'https://buenosmexicanrestaurant.com/sitemap.xml',
   }
 }

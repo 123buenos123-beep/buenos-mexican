@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminDashboard from '@/components/AdminDashboard';
 import NewsletterAdmin from '@/components/NewsletterAdmin';
+import SubscribersAdmin from '@/components/SubscribersAdmin';
 import IntegrityMonitor from '@/components/IntegrityMonitor';
 
 const TABS = [
-  { id: 'bookings',   label: 'Live Bookings',  icon: '📋' },
-  { id: 'newsletter', label: 'Newsletter',      icon: '📧' },
-  { id: 'monitor',    label: 'System Monitor',  icon: '🔧' },
+  { id: 'bookings',     label: 'Live Bookings',  icon: '📋' },
+  { id: 'newsletter',   label: 'Newsletter',      icon: '📧' },
+  { id: 'subscribers',  label: 'Subscribers',     icon: '👥' },
+  { id: 'monitor',      label: 'System Monitor',  icon: '🔧' },
 ];
 
 // ─── Main Admin Page ──────────────────────────────────────────────────────────
@@ -160,9 +162,10 @@ export default function AdminPage() {
       {/* ── Page Content ── */}
       <div style={{ position: 'relative' }}>
         <main className="admin-main" style={{ maxWidth: '1300px', margin: '0 auto', padding: '24px 20px' }}>
-          {tab === 'bookings'   && <AdminDashboard onPendingCount={setPendingCount} />}
-          {tab === 'newsletter' && <NewsletterAdmin isSystemOnline={isOnline} />}
-          {tab === 'monitor'    && <IntegrityMonitor isSystemOnline={isOnline} />}
+          {tab === 'bookings'    && <AdminDashboard onPendingCount={setPendingCount} />}
+          {tab === 'newsletter'  && <NewsletterAdmin isSystemOnline={isOnline} />}
+          {tab === 'subscribers' && <SubscribersAdmin />}
+          {tab === 'monitor'     && <IntegrityMonitor isSystemOnline={isOnline} />}
         </main>
 
         {/* ── Offline Overlay ── */}

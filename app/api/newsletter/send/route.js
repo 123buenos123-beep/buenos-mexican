@@ -248,7 +248,7 @@ export async function POST(request) {
     // 3. Throttled Queue — send ~5 emails/sec (200ms between each)
     const THROTTLE_DELAY_MS = 200;    // 200ms = ~5 emails/sec
     const DB_UPDATE_INTERVAL = 5;     // Update blast progress in DB every 5 emails
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://buenosmexican.com';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://buenosmexicanrestaurant.com';
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'Buenos Mexican <onboarding@resend.dev>';
 
     let totalSentCount = 0;

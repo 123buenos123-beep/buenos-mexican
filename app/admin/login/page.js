@@ -85,7 +85,7 @@ export default function AdminLogin() {
               <label style={s.label}>Email address</label>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="admin@buenosmexican.com" required autoComplete="email" autoFocus
+                placeholder="admin@buenosmexicanrestaurant.com" required autoComplete="email" autoFocus
                 style={s.input}
                 onFocus={e => Object.assign(e.target.style, { borderColor: '#3E2723', boxShadow: '0 0 0 3px rgba(62,39,35,0.08)', background: '#fff' })}
                 onBlur={e => Object.assign(e.target.style, { borderColor: '#E2D9D1', boxShadow: 'none', background: '#FAFAF9' })}

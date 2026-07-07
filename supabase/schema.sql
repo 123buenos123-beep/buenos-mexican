@@ -46,6 +46,13 @@ CREATE TABLE IF NOT EXISTS public.bookings (
   created_at timestamptz DEFAULT now()
 );
 
+-- Prevents two non-cancelled bookings from ever sharing the same table
+-- at the same date/time, even if application logic has a bug or two
+-- requests race past the app-level availability check.
+CREATE UNIQUE INDEX IF NOT EXISTS bookings_table_slot_active_uidx
+  ON public.bookings (table_id, date, time)
+  WHERE status != 'cancelled';
+
 CREATE TABLE IF NOT EXISTS public.booking_settings (
   id integer PRIMARY KEY DEFAULT 1,
   max_bookings_per_slot integer NOT NULL DEFAULT 5,
@@ -343,13 +350,6 @@ BEGIN
             )
           ORDER BY t.capacity ASC LIMIT 1;
 
-          IF v_alt_table_id IS NULL THEN
-            SELECT t.id INTO v_alt_table_id
-            FROM public.tables t
-            WHERE t.is_active = true AND t.capacity >= v_party_int
-            ORDER BY t.capacity ASC LIMIT 1;
-          END IF;
-
           IF v_alt_table_id IS NOT NULL THEN
             v_suggested_slots := v_suggested_slots || jsonb_build_array(
               jsonb_build_object(
@@ -385,18 +385,6 @@ BEGIN
   LIMIT 1
   FOR UPDATE SKIP LOCKED;
 
-  IF v_table_id IS NULL THEN
-    SELECT t.id INTO v_table_id
-    FROM public.tables t
-    WHERE t.is_active = true AND t.capacity >= v_party_int
-    ORDER BY t.capacity ASC LIMIT 1;
-  END IF;
-
-  IF v_table_id IS NULL THEN
-    SELECT t.id INTO v_table_id
-    FROM public.tables t WHERE t.is_active = true LIMIT 1;
-  END IF;
-
   -- No table at this time → suggest other times today
   IF v_table_id IS NULL THEN
 
@@ -417,13 +405,6 @@ BEGIN
             AND b.status != 'cancelled'
         )
       ORDER BY t.capacity ASC LIMIT 1;
-
-      IF v_alt_table_id IS NULL THEN
-        SELECT t.id INTO v_alt_table_id
-        FROM public.tables t
-        WHERE t.is_active = true AND t.capacity >= v_party_int
-        ORDER BY t.capacity ASC LIMIT 1;
-      END IF;
 
       IF v_alt_table_id IS NOT NULL THEN
         v_suggested_slots := v_suggested_slots || jsonb_build_array(

@@ -80,7 +80,7 @@ export default function Location() {
               <h4 className="anton-font text-primary" style={{ fontSize: '1.25rem', letterSpacing: '1px', marginBottom: '0.75rem' }}>CONTACT</h4>
               <p className="text-foreground" style={{ fontSize: '1rem', lineHeight: '1.5' }}>
                 Phone: <span className="font-bold">065 236 2316</span><br/>
-                Email: hola@buenosmexican.com
+                Email: hola@buenosmexicanrestaurant.com
               </p>
             </div>
           </motion.div>
