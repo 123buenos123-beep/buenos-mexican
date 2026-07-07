@@ -269,7 +269,10 @@ export async function POST(request) {
     const THROTTLE_DELAY_MS = 600;    // Resend allows 2 req/sec; 600ms ≈ 1.6/sec stays safely under
     const DB_UPDATE_INTERVAL = 5;     // Update blast progress in DB every 5 emails
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://buenosmexicanrestaurant.com';
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Buenos Mexican <onboarding@resend.dev>';
+    // Fall back to the verified sending domain the booking emails already use,
+    // NOT onboarding@resend.dev — that test sender only delivers to the Resend
+    // account owner, which is why blasts to other inboxes silently failed.
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Buenos Mexican <newsletter@buenosmexicanrestaurant.com>';
 
     let totalSentCount = 0;
     let totalFailedCount = 0;
