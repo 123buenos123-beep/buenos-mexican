@@ -5,6 +5,15 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Sanitise error strings — never leak raw HTML to the client
+function sanitizeMsg(msg) {
+  if (!msg || typeof msg !== 'string') return '';
+  if (msg.trimStart().startsWith('<') || msg.includes('<!DOCTYPE')) {
+    return 'Something went wrong. Please try again or call us directly.';
+  }
+  return msg.replace(/<[^>]*>/g, '').slice(0, 500);
+}
+
 // ── Rate limiting ────────────────────────────────────────────────────────────
 // Two-layer approach:
 //   1. In-memory pre-check  — catches obvious bots instantly, no DB round trip
@@ -165,7 +174,7 @@ export async function POST(request) {
       }]);
 
       return NextResponse.json(
-        { error: errString, message, suggested_slots: suggestedSlots },
+        { error: sanitizeMsg(errString), message: sanitizeMsg(message), suggested_slots: suggestedSlots },
         { status: isConflict ? 409 : 400 }
       );
     }
@@ -209,8 +218,8 @@ export async function POST(request) {
 
     return NextResponse.json(
       { 
-        error: err?.message || 'An unexpected error occurred. Please try again or call us directly.',
-        message: err?.message || 'An unexpected error occurred. Please try again or call us directly.'
+        error: sanitizeMsg(err?.message) || 'An unexpected error occurred. Please try again or call us directly.',
+        message: sanitizeMsg(err?.message) || 'An unexpected error occurred. Please try again or call us directly.'
       },
       { status: isConflict ? 409 : 500 }
     );

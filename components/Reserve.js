@@ -205,6 +205,18 @@ export default function Booking() {
     setShowConfirmModal(true);
   };
 
+  // Sanitise any error string so raw HTML / huge blobs never render in the UI.
+  const sanitizeErrorMsg = (msg) => {
+    if (!msg || typeof msg !== 'string') return '';
+    // If it looks like an HTML page (starts with < or contains DOCTYPE), replace entirely
+    if (msg.trimStart().startsWith('<') || msg.includes('<!DOCTYPE')) {
+      return 'Something went wrong. Please try again or call us directly.';
+    }
+    // Strip any remaining HTML tags and limit length
+    const cleaned = msg.replace(/<[^>]*>/g, '').trim();
+    return cleaned.length > 300 ? cleaned.slice(0, 300) + '…' : cleaned;
+  };
+
   const handleConfirmBooking = async () => {
     setShowConfirmModal(false);
     setStatus('loading');
@@ -228,6 +240,17 @@ export default function Booking() {
         }),
       });
 
+      // If the response isn't JSON (e.g. Vercel returned an HTML error page), bail early
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        console.error('Booking API returned non-JSON response:', res.status, contentType);
+        setErrorMsg('Something went wrong. Please try again or call us directly.');
+        setSuggestedSlots([]);
+        setStatus('error');
+        if (window.turnstile) window.turnstile.reset();
+        return;
+      }
+
       if (res.status === 409) {
         throw new Error('409_CONFLICT');
       }
@@ -239,7 +262,7 @@ export default function Booking() {
         let result = {};
         try {
           result = await res.json();
-          errMsg = result.message || result.error || errMsg;
+          errMsg = sanitizeErrorMsg(result.message || result.error) || errMsg;
           isSlotFull = result.error === 'TIME_SLOT_FULL' || errMsg.includes('No tables available');
           const rawSlots = result.suggested_slots || [];
           const rawTimes = (result.suggested_times || []).map(t => ({ date: formData.date, time: t }));
@@ -247,7 +270,8 @@ export default function Booking() {
           // Filter out Mondays (closed day) from suggestions
           suggested = allSlots.filter(s => new Date(s.date + 'T00:00:00').getDay() !== 1);
         } catch (e) {
-          // ignore parsing error
+          // JSON parsing failed — response was likely HTML, not JSON
+          console.error('Failed to parse booking error response:', e);
         }
 
         if (isSlotFull) {
