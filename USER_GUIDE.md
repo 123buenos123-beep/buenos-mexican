@@ -123,7 +123,7 @@ When a day reaches the cap, customers who try to book will be shown alternative 
 4. Click **Email Preview** to see exactly how the email will look to subscribers
 5. Click **Send Blast** → confirm the popup
 
-The email is sent to **all active subscribers** at ~5 emails per second. A branded header and unsubscribe link are added automatically to every email.
+The email is sent to **all active subscribers** at a throttled rate (about 1.6 emails/second, to stay under Resend's limit), so a large list takes a few minutes to finish. A branded header and unsubscribe link are added automatically to every email.
 
 > Always preview before sending — you cannot unsend a blast.
 
@@ -236,6 +236,7 @@ NEXT_PUBLIC_SITE_URL              = https://buenosmexicanrestaurant.com
 NEXT_PUBLIC_TURNSTILE_SITE_KEY    = <from Cloudflare Turnstile dashboard>
 TURNSTILE_SECRET_KEY              = <from Cloudflare Turnstile dashboard>
 RESEND_API_KEY                    = <from resend.com>
+RESEND_FROM_EMAIL                 = Buenos Mexican <newsletter@buenosmexicanrestaurant.com>   # must be a Resend-verified domain
 LINE_CHANNEL_ACCESS_TOKEN         = <from LINE Developers console>
 LINE_MANAGER_USER_ID              = <LINE user ID of the manager>
 GOOGLE_SHEET_WEBHOOK_URL          = <Google Apps Script deployment URL>
@@ -262,6 +263,10 @@ After any environment variable change in Vercel, redeploy for the changes to tak
 - Go to Supabase → Edge Functions → `send-booking-email` → Logs to see the error
 - Verify the Resend sending domain is verified at resend.com/domains
 
+### Newsletter only reaches my own email (not real subscribers)
+- Resend will not deliver to other addresses until you send from a **verified domain**. Verify your domain at resend.com/domains, then set `RESEND_FROM_EMAIL` in Vercel to an address on that domain (e.g. `newsletter@buenosmexicanrestaurant.com`) and redeploy.
+- Make sure Vercel's `RESEND_API_KEY` belongs to the **same** Resend account where the domain is verified (the account that sends the booking emails).
+
 ### LINE notifications not arriving
 - Check `LINE_CHANNEL_ACCESS_TOKEN` is valid and not expired
 - The System Monitor → Booking Pipeline Log will show `❌ Failed (401 Bad Token)` if the token is wrong
@@ -277,7 +282,7 @@ After any environment variable change in Vercel, redeploy for the changes to tak
 - Check that the domain is added to the Turnstile site in Cloudflare dashboard
 
 ### Unsubscribe links in emails go to localhost
-- `NEXT_PUBLIC_SITE_URL` is set to `http://localhost:3000` — change it to `https://buenosmexicanrestaurant.com` in Vercel
+- This is now prevented in code — newsletter links are built from the live request host and never emit a localhost URL. If you still see it, confirm the blast was sent from the live site (not a local `npm run dev`), and set `NEXT_PUBLIC_SITE_URL=https://buenosmexicanrestaurant.com` in Vercel as a backstop.
 
 ### Admin panel shows "Connection Lost"
 - Usually a temporary network issue — the panel reconnects automatically

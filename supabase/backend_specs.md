@@ -184,7 +184,7 @@ There is intentionally **no fallback that ignores the availability check** — e
 // Day full — cross-day suggestions
 {
   "error": "TIME_SLOT_FULL",
-  "message": "Ay caramba! ...",
+  "message": "😔 Sorry, we're fully booked on this day. Try one of these dates instead:",
   "suggested_slots": [
     { "date": "2026-06-27", "time": "19:00" },
     { "date": "2026-06-27", "time": "19:30" }
@@ -211,21 +211,23 @@ There is intentionally **no fallback that ignores the availability check** — e
 
 ## Security (RLS)
 
-Every table has RLS enabled, but access control in this app is enforced at the **application layer** (Next.js proxy gates `/admin/*`, and the `anon` key is used everywhere including the admin dashboard) rather than per-table RLS restrictions. Current policies:
+Every table has RLS enabled. Tables holding customer PII are **locked to authenticated staff** — the public `anon`/publishable key (shipped to browsers) cannot read them. `proxy.js` still gates the `/admin/*` *pages*, but RLS is what actually protects the *data*.
 
 | Table | Policy |
 |:---|:---|
-| `bookings` | Open — `FOR ALL` to `anon, authenticated` |
+| `bookings` | **`authenticated` only** (`FOR ALL`). Public reservations are created via the `create_booking` SECURITY DEFINER RPC (bypasses RLS); server routes use the `service_role` key. Anon has no direct access. |
+| `subscribers` | anon may **`INSERT` only** (newsletter signup); `authenticated` full access. Anon cannot read/update/delete the list. |
 | `tables` | `SELECT` open to everyone; `INSERT/UPDATE/DELETE` restricted to `authenticated` |
 | `customers` | `authenticated` only, restricted to own row (`auth.uid() = id`) |
 | `booking_settings` | `SELECT` open to everyone; `UPDATE` restricted to `service_role` |
-| `subscribers` | Open — `FOR ALL` to `anon, authenticated` |
-| `booking_attempts` | Open — `FOR ALL` to `anon, authenticated` |
-| `vip_signup_attempts` | Open — `FOR ALL` to `anon, authenticated` |
+| `booking_attempts` | Open — `FOR ALL` to `anon, authenticated` (logging; written by the anon booking route) |
+| `vip_signup_attempts` | Open — `FOR ALL` to `anon, authenticated` (logging; written by the anon signup modal) |
 | `email_blasts` | Open — `FOR ALL` to `anon, authenticated` |
 | `email_logs` | Open — `FOR ALL` to `anon, authenticated` |
 
-The real gate for the admin surface is `proxy.js` (session check before `/admin/*` pages render) — not RLS. Anyone with the anon/publishable key can read/write these tables directly via the REST API; this is a deliberate simplicity tradeoff for a small single-tenant app, not an oversight.
+The PII lockdown is applied by `supabase/migrations/20260708120000_lock_pii_rls_v2.sql`, which drops **every** existing policy on `bookings`/`subscribers` by enumerating `pg_policies`, then recreates only the intended ones (a name-agnostic reset — an earlier v1 that dropped policies by name missed a legacy policy and left `bookings` readable). Server routes that write these tables (`email-webhook`, `unsubscribe`, `cancel-booking`, `booking-settings`) use the `service_role` key, which bypasses RLS.
+
+The logging tables (`booking_attempts`, `vip_signup_attempts`) remain anon-accessible so the public booking route and signup modal can write to them. They contain name/email and are a candidate for the same lockdown.
 
 ---
 
@@ -282,9 +284,9 @@ Booking submission pipeline:
 6. `create_booking` RPC call
 7. Log result to `booking_attempts`
 
-### `GET/POST /api/admin/booking-settings`
+### `GET/PATCH /api/admin/booking-settings`
 
-Read or update `max_bookings_per_slot` in `booking_settings`. Admin dashboard only.
+Read (`GET`) or update (`PATCH`) `max_bookings_per_slot` in `booking_settings`. Both require an authenticated admin session; the write uses the `service_role` key.
 
 ### `GET/POST /api/cancel-booking`
 
@@ -294,11 +296,11 @@ Customer self-service cancellation, reached via the link in booking emails.
 
 ### `POST /api/newsletter/send`
 
-Throttled batch send to all active subscribers. Reads `subscribers WHERE is_active = true`, creates an `email_blasts` record, sends via Resend, and logs each send to `email_logs`.
+Throttled batch send to all active subscribers (~1.6 emails/sec — 600ms apart — to stay under Resend's 2 req/sec limit, with a 429 backoff-retry so a rate-limited recipient isn't dropped). Reads `subscribers WHERE is_active = true`, creates an `email_blasts` record, sends via Resend from `RESEND_FROM_EMAIL` (falls back to `newsletter@buenosmexicanrestaurant.com` — a verified-domain address, never the `onboarding@resend.dev` test sender, which only reaches the account owner), and logs each send to `email_logs`. The unsubscribe link is built from the request's host, so it never points at localhost.
 
 ### `POST /api/email-webhook`
 
-Resend webhook receiver. Maps Resend event types to local statuses:
+Resend webhook receiver. Uses the `service_role` key (it deactivates bounced subscribers — a write anon RLS no longer allows). Maps Resend event types to local statuses:
 - `email.delivered` → `delivered`
 - `email.bounced` → `bounced` (hard: deactivate subscriber; soft: keep active)
 - `email.failed` → `failed` (deactivate subscriber)

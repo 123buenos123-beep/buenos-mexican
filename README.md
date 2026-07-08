@@ -208,11 +208,11 @@ Full newsletter management system accessible via the admin dashboard's "Newslett
 **Subscriber flow:**
 - Customers subscribe via `NewsletterModal` (triggered from navbar VIP button)
 - Stored in `public.subscribers` with `is_active` flag and `status` field
-- Unsubscribe via tokenized link (`/api/unsubscribe?token=...`)
+- Unsubscribe via a per-email link (`/api/unsubscribe?email=...`); the link's base URL is derived from the request host so it never points at localhost
 
 **Campaign management (`components/NewsletterAdmin.js`):**
 - Rich text editor (react-quill-new) for composing HTML emails
-- Throttled batch send via `/api/newsletter/send` (avoids Resend rate limits)
+- Throttled batch send via `/api/newsletter/send` — ~1.6 emails/sec (600ms apart) to stay under Resend's 2 req/sec limit, with 429 backoff-retry. Sends from a verified-domain address (`RESEND_FROM_EMAIL`), never the `onboarding@resend.dev` test sender
 - Real-time campaign progress via Supabase Realtime
 - Delivery tracking: `email_blasts` and `email_logs` tables track sent/delivered/bounced per subscriber
 
@@ -400,6 +400,9 @@ TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 
 # Notification pipeline (used by Supabase Edge Function)
 RESEND_API_KEY=re_your_resend_api_key
+# Newsletter "From" address — must be at a Resend-verified domain, otherwise blasts
+# only reach the Resend account owner. Defaults to newsletter@buenosmexicanrestaurant.com.
+RESEND_FROM_EMAIL=Buenos Mexican <newsletter@buenosmexicanrestaurant.com>
 LINE_CHANNEL_ACCESS_TOKEN=your-line-bot-channel-access-token
 LINE_MANAGER_USER_ID=Uyour-line-manager-user-id
 GOOGLE_SHEET_WEBHOOK_URL=https://script.google.com/macros/s/your-script-id/exec
@@ -428,6 +431,16 @@ To set up a fresh database:
 2. Paste the contents of `supabase/schema.sql` and run
 
 > **Note:** The `ALTER DATABASE` line near the top of `schema.sql` requires superuser access. Skip it if it errors — run everything else. That line sets the `app.supabase_anon_key` config used by the email trigger function; you can set it manually in **Supabase Dashboard → Settings → Database → Configuration** if needed.
+
+### Incremental migrations
+
+`schema.sql` is the full source of truth and already reflects the current state. For an **already-provisioned** database, apply changes without re-running everything from `supabase/migrations/` (paste each into the SQL Editor — they're idempotent). Applied so far:
+
+- `20260707120000_lock_pii_rls.sql` — initial PII lockdown (superseded by v2)
+- `20260708120000_lock_pii_rls_v2.sql` — deterministic PII lockdown for `bookings` / `subscribers` (drops all policies, recreates the intended ones)
+- `20260708130000_booking_full_message.sql` — reword the "day fully booked" message in `create_booking`
+
+> These were applied by hand in the SQL Editor, so Supabase's migration-history table doesn't track them — apply new ones the same way rather than via `supabase db push`.
 
 ### Deploy Edge Function Secrets
 
