@@ -384,7 +384,7 @@ BEGIN
 
     RETURN jsonb_build_object(
       'error', 'TIME_SLOT_FULL',
-      'message', 'Ay caramba! The whole day is fully booked — our fiesta is sold out! Snag a spot on another day below:',
+      'message', '😔 Sorry, we''re fully booked on this day. Try one of these dates instead:',
       'suggested_slots', v_suggested_slots
     );
   END IF;
