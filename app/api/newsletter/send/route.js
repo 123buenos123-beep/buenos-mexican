@@ -29,6 +29,21 @@ function makeImagesResponsive(html) {
   });
 }
 
+// ─── Resolve the public site origin for links inside the email ──────
+// Never emit a localhost URL in a real send. Prefer the host the request
+// actually arrived on (correct automatically on the live site), then
+// NEXT_PUBLIC_SITE_URL, then the production domain.
+function resolveSiteUrl(request) {
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  const fromRequest = host ? `${proto}://${host}` : '';
+  const isLocal = (u) => /\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(u);
+  for (const candidate of [fromRequest, process.env.NEXT_PUBLIC_SITE_URL]) {
+    if (candidate && !isLocal(candidate)) return candidate.replace(/\/+$/, '');
+  }
+  return 'https://buenosmexicanrestaurant.com';
+}
+
 // ─── Branded HTML Email Template ────────────────────────────────────
 function buildEmailHtml(bodyContent, subscriberEmail, siteUrl) {
   // Normalise all images before injecting into the template
@@ -268,7 +283,7 @@ export async function POST(request) {
     // 3. Throttled Queue — send ~1.6 emails/sec (600ms apart), under Resend's 2 req/sec limit
     const THROTTLE_DELAY_MS = 600;    // Resend allows 2 req/sec; 600ms ≈ 1.6/sec stays safely under
     const DB_UPDATE_INTERVAL = 5;     // Update blast progress in DB every 5 emails
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://buenosmexicanrestaurant.com';
+    const siteUrl = resolveSiteUrl(request);
     // Fall back to the verified sending domain the booking emails already use,
     // NOT onboarding@resend.dev — that test sender only delivers to the Resend
     // account owner, which is why blasts to other inboxes silently failed.
