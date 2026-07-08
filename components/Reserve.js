@@ -415,10 +415,10 @@ export default function Booking() {
                 {sectionLabel('Personal Details')}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div style={{ position: 'relative' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>Full Name</label>
+                    <label htmlFor="booking-name" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>Full Name</label>
                     <div style={{ position: 'relative' }}>
                       <span style={iconStyle}><User size={16} /></span>
-                      <input required type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Your full name"
+                      <input required id="booking-name" type="text" name="name" autoComplete="name" value={formData.name} onChange={handleChange} placeholder="Your full name"
                         style={inputBase}
                         onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(139,28,28,0.1)'; }}
                         onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
@@ -427,10 +427,10 @@ export default function Booking() {
                   </div>
 
                   <div style={{ position: 'relative' }}>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>Email Address</label>
+                    <label htmlFor="booking-email" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>Email Address</label>
                     <div style={{ position: 'relative' }}>
                       <span style={iconStyle}><Mail size={16} /></span>
-                      <input required type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Your email address"
+                      <input required id="booking-email" type="email" name="email" autoComplete="email" value={formData.email} onChange={handleChange} placeholder="Your email address"
                         style={inputBase}
                         onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(139,28,28,0.1)'; }}
                         onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
@@ -439,10 +439,10 @@ export default function Booking() {
                   </div>
 
                   <div style={{ position: 'relative' }} className="md:col-span-2">
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>Phone Number</label>
+                    <label htmlFor="booking-phone" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>Phone Number</label>
                     <div style={{ position: 'relative' }}>
                       <span style={iconStyle}><Phone size={16} /></span>
-                      <input required type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="Your phone number"
+                      <input required id="booking-phone" type="tel" name="phone" autoComplete="tel" value={formData.phone} onChange={handleChange} placeholder="Your phone number"
                         style={inputBase}
                         onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(139,28,28,0.1)'; }}
                         onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}

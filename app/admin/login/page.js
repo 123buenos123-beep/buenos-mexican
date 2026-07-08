@@ -82,9 +82,9 @@ export default function AdminLogin() {
           <form onSubmit={handleSubmit} style={s.form}>
             {/* Email */}
             <div style={s.fieldGroup}>
-              <label style={s.label}>Email address</label>
+              <label htmlFor="login-email" style={s.label}>Email address</label>
               <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
+                id="login-email" type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder="admin@buenosmexicanrestaurant.com" required autoComplete="email" autoFocus
                 style={s.input}
                 onFocus={e => Object.assign(e.target.style, { borderColor: '#3E2723', boxShadow: '0 0 0 3px rgba(62,39,35,0.08)', background: '#fff' })}
@@ -94,10 +94,10 @@ export default function AdminLogin() {
 
             {/* Password */}
             <div style={s.fieldGroup}>
-              <label style={s.label}>Password</label>
+              <label htmlFor="login-password" style={s.label}>Password</label>
               <div style={{ position: 'relative' }}>
                 <input
-                  type={showPw ? 'text' : 'password'} value={password}
+                  id="login-password" type={showPw ? 'text' : 'password'} value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••••••" required autoComplete="current-password"
                   style={{ ...s.input, paddingRight: '48px', boxSizing: 'border-box' }}

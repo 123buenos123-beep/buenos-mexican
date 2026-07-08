@@ -239,7 +239,7 @@ export default function NewsletterModal({ isOpen, onClose }) {
                       color: '#B09080', pointerEvents: 'none',
                     }} />
                     <input
-                      type="text" placeholder="Your Name (Optional)"
+                      type="text" placeholder="Your Name (Optional)" aria-label="Your name" autoComplete="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       style={{
@@ -260,7 +260,7 @@ export default function NewsletterModal({ isOpen, onClose }) {
                       color: '#B09080', pointerEvents: 'none',
                     }} />
                     <input
-                      required type="email" placeholder="Email Address *"
+                      required type="email" placeholder="Email Address *" aria-label="Email address" autoComplete="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       style={{
