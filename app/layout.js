@@ -40,6 +40,28 @@ export const metadata = {
     index: true,
     follow: true,
   },
+  openGraph: {
+    type: 'website',
+    siteName: 'Buenos Mexican Cuisine',
+    url: 'https://buenosmexicanrestaurant.com',
+    title: 'Buenos Mexican Restaurant | Best Mexican Food in Pattaya',
+    description: 'The best Buenos Mexican Restaurant in Pattaya, serving authentic Mexican cuisine. Enjoy delicious tacos, burritos, and margaritas in the heart of Chon Buri.',
+    locale: 'en_US',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'A traditional Mexican platter at Buenos Mexican Cuisine, Pattaya',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Buenos Mexican Restaurant | Best Mexican Food in Pattaya',
+    description: 'Authentic Mexican cuisine in Pattaya — tacos, burritos, margaritas & more.',
+    images: ['/og-image.jpg'],
+  },
 };
 
 export default function RootLayout({ children }) {
