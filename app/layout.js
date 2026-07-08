@@ -69,7 +69,7 @@ export default function RootLayout({ children }) {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
     'name': 'Buenos Mexican Cuisine',
-    'image': 'https://buenosmexicanrestaurant.com/images/platillos.webp',
+    'image': 'https://buenosmexicanrestaurant.com/og-image.jpg',
     'address': {
       '@type': 'PostalAddress',
       'streetAddress': 'Jomtien Complex, 413/9-10 Thappraya Rd',
