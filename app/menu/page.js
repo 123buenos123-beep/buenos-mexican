@@ -6,7 +6,7 @@ import MenuItemModal from '@/components/MenuItemModal';
 import GrabFooterButton from '@/components/GrabFooterButton';
 import Image from 'next/image';
 import { useState, useCallback, memo, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { motion, AnimatePresence, useInView, useMotionValue, useAnimationFrame, useReducedMotion } from 'framer-motion';
 
 import { menuData } from '@/lib/menu-data';
 
@@ -44,34 +44,89 @@ function AnimatedGrid({ children, style, className }) {
   );
 }
 
-/* ── Sticky section nav ── */
-function SectionNavBar({ activeSection }) {
-  const scrollRef = useRef(null);
+/* ── Sticky section nav — draggable infinite marquee (Framer Motion) ──
+   A motion value drives the track: useAnimationFrame drifts it left like a
+   ticker, and drag="x" lets fingers/mouse swipe the same value. The pill
+   list is rendered 3× and the value is wrapped back into the middle copy
+   whenever it strays one full copy-width, which is visually seamless. */
+const MARQUEE_SPEED = 45; // px per second
 
+function SectionNavBar({ activeSection }) {
+  const x = useMotionValue(0);
+  const groupRef = useRef(null);
+  const periodRef = useRef(0);       // pixel width of one copy of the pill list
+  const hoverPauseRef = useRef(false);
+  const draggingRef = useRef(false);
+  const lastDragEndRef = useRef(0);
+  const prefersReduced = useReducedMotion();
+
+  // measure one copy's width (re-measure after fonts settle & on resize)
   useEffect(() => {
-    if (!scrollRef.current || !activeSection) return;
-    const container = scrollRef.current;
-    const pill = container.querySelector(`[data-slug="${activeSection}"]`);
-    if (!pill) return;
-    // Direct scrollLeft assignment instead of scrollIntoView — Lenis intercepts scrollIntoView
-    // on sticky elements and scrolls the window to top, causing the page-jump bug.
-    container.scrollLeft = pill.offsetLeft - container.offsetWidth / 2 + pill.offsetWidth / 2;
-  }, [activeSection]);
+    const measure = () => {
+      const w = groupRef.current ? groupRef.current.offsetWidth : 0;
+      if (w && Math.abs(w - periodRef.current) > 1) {
+        periodRef.current = w;
+        x.set(-w); // start on the middle copy so there's slack on both sides
+      }
+    };
+    measure();
+    const t = setTimeout(measure, 1000);
+    window.addEventListener('resize', measure);
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
+  }, [x]);
+
+  useAnimationFrame((_, delta) => {
+    const p = periodRef.current;
+    if (!p) return;
+    // hands off while the user is dragging or momentum is settling
+    if (draggingRef.current || x.isAnimating()) return;
+    let v = x.get();
+    if (!prefersReduced && !hoverPauseRef.current) v -= MARQUEE_SPEED * (delta / 1000);
+    // wrap back into the middle copy → infinite loop in both directions
+    if (v > -p * 0.5) v -= p;
+    else if (v < -p * 1.5) v += p;
+    x.set(v);
+  });
+
+  // a swipe must not fire the link click that follows it
+  const onClickCapture = (e) => {
+    if (draggingRef.current || Date.now() - lastDragEndRef.current < 250) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const renderPills = (copy) => menuData.map(section => (
+    <a
+      key={`${copy}-${section.slug}`}
+      href={`#${section.slug}`}
+      className={`menu-nav-pill${activeSection === section.slug ? ' active' : ''}`}
+      draggable={false}
+      tabIndex={copy > 0 ? -1 : undefined}
+    >
+      {section.isSpecial && <span style={{ marginRight: 4 }}>🔥</span>}
+      {section.category}
+    </a>
+  ));
 
   return (
     <div className="menu-nav-bar">
-      <div className="menu-nav-scroll" ref={scrollRef}>
-        {menuData.map(section => (
-          <a
-            key={section.slug}
-            href={`#${section.slug}`}
-            data-slug={section.slug}
-            className={`menu-nav-pill${activeSection === section.slug ? ' active' : ''}`}
-          >
-            {section.isSpecial && <span style={{ marginRight: 4 }}>🔥</span>}
-            {section.category}
-          </a>
-        ))}
+      <div className="menu-nav-marquee">
+        <motion.div
+          className="menu-nav-track"
+          style={{ x }}
+          drag="x"
+          dragTransition={{ power: 0.35, timeConstant: 200 }}
+          onDragStart={() => { draggingRef.current = true; }}
+          onDragEnd={() => { draggingRef.current = false; lastDragEndRef.current = Date.now(); }}
+          onHoverStart={() => { hoverPauseRef.current = true; }}
+          onHoverEnd={() => { hoverPauseRef.current = false; }}
+          onClickCapture={onClickCapture}
+        >
+          <div className="menu-nav-group" ref={groupRef}>{renderPills(0)}</div>
+          <div className="menu-nav-group" aria-hidden="true">{renderPills(1)}</div>
+          <div className="menu-nav-group" aria-hidden="true">{renderPills(2)}</div>
+        </motion.div>
       </div>
     </div>
   );

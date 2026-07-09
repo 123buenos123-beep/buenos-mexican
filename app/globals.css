@@ -1,9 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Bree+Serif&family=Montserrat:wght@400;500;600;700&display=swap');
-@import 'swiper/css';
-@import 'swiper/css/autoplay';
-@import 'swiper/css/navigation';
-@import 'swiper/css/pagination';
-@import 'swiper/css/free-mode';
 
 
 :root {
@@ -1237,19 +1232,34 @@ button {
   box-shadow: 0 4px 20px rgba(62, 39, 35, 0.08);
 }
 
-.menu-nav-scroll {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+/* Draggable infinite marquee: Framer Motion drives the track's transform
+   (ticker drift + drag/swipe on the same motion value); the pill list is
+   tripled and wrapped by one copy-width for a seamless loop. */
+.menu-nav-marquee {
+  overflow: hidden;
+  padding: 0.6rem 0;
   max-width: 1400px;
   margin: 0 auto;
+  /* soft fade at both edges so pills appear/disappear gracefully */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
 }
 
-.menu-nav-scroll::-webkit-scrollbar {
-  display: none;
+.menu-nav-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  cursor: grab;
+}
+
+.menu-nav-track:active {
+  cursor: grabbing;
+}
+
+.menu-nav-group {
+  display: flex;
+  gap: 0.5rem;
+  padding-right: 0.5rem; /* must match the gap for a seamless wrap */
 }
 
 .menu-nav-pill {

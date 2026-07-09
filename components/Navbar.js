@@ -1,6 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import NewsletterModal from './NewsletterModal';
@@ -49,6 +51,7 @@ export default function Navbar() {
     }}>
       <div className="flex justify-between items-center" style={{ width: '100%', padding: '0 5%' }}>
         <a href="/" className="anton-font flex items-center gap-2 lg:gap-10" style={{ fontSize: 'clamp(1.2rem, 4.5vw, 2.2rem)', color: '#fff', letterSpacing: '1px', textShadow: '0 2px 4px rgba(0,0,0,0.5)', lineHeight: 1.1 }}>
+          <Image src="/logo-navbar.png" alt="" width={303} height={240} style={{ width: 'clamp(70px, 15vw, 100px)', height: 'auto', flexShrink: 0 }} priority />
           <span className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
             <span>Buenos Mexican</span>
             <span className="text-primary" style={{ textShadow: '0 2px 8px rgba(139, 28, 28, 0.4)' }}>Restaurant</span>
@@ -57,9 +60,9 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <ul className="desktop-menu gap-8 uppercase tracking-widest items-center" style={{ fontSize: '0.8rem', fontWeight: '500', margin: 0 }}>
-          <li><a href="/#home"     className="nav-link" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Home</a></li>
-          <li><a href="/menu"      className="nav-link" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Menu</a></li>
-          <li><a href="/#booking"  className="nav-link" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Booking</a></li>
+          <li><a href="/#home" className="nav-link" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Home</a></li>
+          <li><a href="/menu" className="nav-link" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Menu</a></li>
+          <li><a href="/#booking" className="nav-link" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Booking</a></li>
           <li><a href="/#specials" className="nav-link" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Specials</a></li>
           <li><a href="/#location" className="nav-link" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Location</a></li>
 
@@ -94,7 +97,7 @@ export default function Navbar() {
                     ],
                   }}
                   transition={{
-                    boxShadow:   { repeat: Infinity, duration: 2.4, ease: 'easeInOut', delay: 1.6 },
+                    boxShadow: { repeat: Infinity, duration: 2.4, ease: 'easeInOut', delay: 1.6 },
                     borderColor: { repeat: Infinity, duration: 2.4, ease: 'easeInOut', delay: 1.6 },
                   }}
                   style={{
@@ -156,9 +159,9 @@ export default function Navbar() {
         transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
         backdropFilter: 'blur(10px)', overflowY: 'auto', padding: '80px 0 40px 0',
       }}>
-        <a href="/#home"     className="nav-link uppercase tracking-widest font-bold text-2xl" onClick={() => setIsOpen(false)} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Home</a>
-        <a href="/menu"      className="nav-link uppercase tracking-widest font-bold text-2xl" onClick={() => setIsOpen(false)} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Menu</a>
-        <a href="/#booking"  className="nav-link uppercase tracking-widest font-bold text-2xl" onClick={() => setIsOpen(false)} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Booking</a>
+        <a href="/#home" className="nav-link uppercase tracking-widest font-bold text-2xl" onClick={() => setIsOpen(false)} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Home</a>
+        <a href="/menu" className="nav-link uppercase tracking-widest font-bold text-2xl" onClick={() => setIsOpen(false)} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Menu</a>
+        <a href="/#booking" className="nav-link uppercase tracking-widest font-bold text-2xl" onClick={() => setIsOpen(false)} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Booking</a>
         <a href="/#specials" className="nav-link uppercase tracking-widest font-bold text-2xl" onClick={() => setIsOpen(false)} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Daily Specials</a>
         <a href="/#location" className="nav-link uppercase tracking-widest font-bold text-2xl" onClick={() => setIsOpen(false)} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Location</a>
 
@@ -180,7 +183,7 @@ export default function Navbar() {
             ],
           }}
           transition={{
-            boxShadow:   { repeat: Infinity, duration: 2.4, ease: 'easeInOut' },
+            boxShadow: { repeat: Infinity, duration: 2.4, ease: 'easeInOut' },
             borderColor: { repeat: Infinity, duration: 2.4, ease: 'easeInOut' },
           }}
           style={{

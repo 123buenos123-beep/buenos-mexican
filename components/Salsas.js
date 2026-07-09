@@ -1,10 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay } from 'swiper/modules';
-import { useRef, useEffect } from 'react';
 import Image from 'next/image';
+import MarqueeCarousel from './MarqueeCarousel';
 
 const salsas = [
   {
@@ -92,23 +90,7 @@ function SpiceMeter({ level }) {
   );
 }
 
-const ensureLoop = (arr, min = 12) => {
-  if (arr.length >= min) return arr;
-  const out = [];
-  while (out.length < min) out.push(...arr);
-  return out;
-};
-
-const loopedSalsas = ensureLoop(salsas);
-
 export default function Salsas() {
-  const swiperRef = useRef(null);
-
-  useEffect(() => {
-    const swiper = swiperRef.current;
-    if (swiper?.autoplay) swiper.autoplay.start();
-  }, []);
-
   return (
     <section
       id="salsas"
@@ -142,62 +124,52 @@ export default function Salsas() {
         </div>
       </motion.div>
 
-      <div style={{ padding: '20px 0', position: 'relative' }}>
-        <button className="salsa-arrow salsa-arrow-prev" aria-label="Previous" onClick={() => swiperRef.current?.slidePrev(700, true)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <button className="salsa-arrow salsa-arrow-next" aria-label="Next" onClick={() => swiperRef.current?.slideNext(700, true)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-        <Swiper
-          modules={[Autoplay]}
-          onSwiper={(swiper) => { swiperRef.current = swiper; }}
-          spaceBetween={18}
-          slidesPerView={1.45}
-          loop={true}
-          speed={700}
-          autoplay={{ delay: 2500, disableOnInteraction: false, pauseOnMouseEnter: true }}
-          grabCursor={true}
-          breakpoints={{
-            640:  { slidesPerView: 2.4, spaceBetween: 20 },
-            1024: { slidesPerView: 4,   spaceBetween: 22 },
-          }}
-          className="salsa-swiper"
-        >
-          {loopedSalsas.map((salsa, i) => (
-            <SwiperSlide key={`${salsa.name}-${i}`}>
-              <div className="salsa-card">
+      {/* Continuous draggable marquee — same engine as the menu-page nav bar */}
+      <div style={{ padding: '20px 0' }}>
+        <MarqueeCarousel speed={45} gap={22} prevClass="salsa-arrow salsa-arrow-prev" nextClass="salsa-arrow salsa-arrow-next">
+          {salsas.map((salsa) => (
+            <div key={salsa.name} className="salsa-card salsa-slide">
 
-                {/* Top — photo */}
-                <div className="salsa-card-photo">
-                  <Image
-                    src={salsa.image}
-                    alt={salsa.name}
-                    fill
-                    sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 26vw"
-                    style={{ objectFit: 'cover' }}
-                  />
-                  {/* Spice badge — top right of photo */}
-                  <div className="salsa-card-spice">
-                    <SpiceMeter level={salsa.level} />
-                  </div>
-                </div>
-
-                {/* Bottom — colored info panel */}
-                <div className="salsa-card-body" style={{ background: salsa.gradient }}>
-                  <div className="salsa-card-num" aria-hidden="true">{salsa.num}</div>
-                  <div className="salsa-card-noise" aria-hidden="true" />
-                  <span className="salsa-card-heat">{SPICE_LABELS[salsa.level - 1]}</span>
-                  <h3 className="salsa-card-name script-font">{salsa.name}</h3>
-                  <p className="salsa-card-desc">{salsa.desc}</p>
+              {/* Top — photo */}
+              <div className="salsa-card-photo">
+                <Image
+                  src={salsa.image}
+                  alt={salsa.name}
+                  fill
+                  draggable={false}
+                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 45vw, 26vw"
+                  style={{ objectFit: 'cover' }}
+                />
+                {/* Spice badge — top right of photo */}
+                <div className="salsa-card-spice">
+                  <SpiceMeter level={salsa.level} />
                 </div>
               </div>
-            </SwiperSlide>
+
+              {/* Bottom — colored info panel */}
+              <div className="salsa-card-body" style={{ background: salsa.gradient }}>
+                <div className="salsa-card-num" aria-hidden="true">{salsa.num}</div>
+                <div className="salsa-card-noise" aria-hidden="true" />
+                <span className="salsa-card-heat">{SPICE_LABELS[salsa.level - 1]}</span>
+                <h3 className="salsa-card-name script-font">{salsa.name}</h3>
+                <p className="salsa-card-desc">{salsa.desc}</p>
+              </div>
+            </div>
           ))}
-        </Swiper>
+        </MarqueeCarousel>
       </div>
 
       <style>{`
+        .salsa-slide {
+          width: 68vw;
+          flex-shrink: 0;
+        }
+        @media (min-width: 640px) {
+          .salsa-slide { width: 38vw; }
+        }
+        @media (min-width: 1024px) {
+          .salsa-slide { width: 300px; }
+        }
         .salsa-arrow {
           position: absolute;
           top: 50%;

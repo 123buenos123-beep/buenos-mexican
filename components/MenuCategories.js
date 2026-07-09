@@ -1,11 +1,10 @@
 'use client';
 
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useInView } from 'framer-motion';
-import { Swiper, SwiperSlide } from 'swiper/react';
 import Image from 'next/image';
-import { Autoplay } from 'swiper/modules';
 import { Utensils } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
+import MarqueeCarousel from './MarqueeCarousel';
 
 import { menuData } from '@/lib/menu-data';
 
@@ -54,23 +53,9 @@ function useTilt() {
   };
 }
 
-const ensureLoop = (arr, min = 12) => {
-  if (arr.length >= min) return arr;
-  const out = [];
-  while (out.length < min) out.push(...arr);
-  return out;
-};
-
 export default function MenuCategories() {
   const tilt = useTilt();
   const menuBurst = useBurst();
-  const carouselRef = useRef(null);
-  const loopedMenu = ensureLoop(menuData);
-
-  useEffect(() => {
-    const swiper = carouselRef.current;
-    if (swiper?.autoplay) swiper.autoplay.start();
-  }, []);
 
   /* ── Scroll entrance tracking ── */
   const btnRef = useRef(null);
@@ -184,51 +169,40 @@ export default function MenuCategories() {
 
       </motion.div>
 
-      {/* Swiper outside motion.div so it initialises with full dimensions */}
-      <div style={{ padding: '20px 0', position: 'relative' }}>
-        {/* Nav arrows */}
-        <button className="qm-arrow qm-arrow-prev" aria-label="Previous" onClick={() => carouselRef.current?.slidePrev(700, true)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        <button className="qm-arrow qm-arrow-next" aria-label="Next" onClick={() => carouselRef.current?.slideNext(700, true)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
-
-        <Swiper
-          modules={[Autoplay]}
-          onSwiper={(swiper) => { carouselRef.current = swiper; }}
-          spaceBetween={24}
-          slidesPerView={1.2}
-          loop={true}
-          speed={700}
-          autoplay={{ delay: 2500, disableOnInteraction: false, pauseOnMouseEnter: true }}
-          grabCursor={true}
-          breakpoints={{ 640: { slidesPerView: 2.2 }, 1024: { slidesPerView: 4 } }}
-          className="quick-menu-swiper"
-        >
-          {loopedMenu.map((section, i) => (
-            <SwiperSlide key={i}>
-              <a href={`/menu#${section.slug}`} style={{ display: 'block' }}>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="menu-cat-card">
-                  <div className="menu-cat-overlay"></div>
-                  <div className="menu-cat-bg">
-                    <Image src={section.image} alt={section.category} fill style={{ objectFit: 'cover', opacity: 0.9 }} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" />
+      {/* Continuous draggable marquee — same engine as the menu-page nav bar */}
+      <div style={{ padding: '20px 0' }}>
+        <MarqueeCarousel speed={50} gap={24} prevClass="qm-arrow qm-arrow-prev" nextClass="qm-arrow qm-arrow-next">
+          {menuData.map((section) => (
+            <a key={section.slug} href={`/menu#${section.slug}`} className="menu-cat-slide" style={{ display: 'block' }} draggable={false}>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="menu-cat-card">
+                <div className="menu-cat-overlay"></div>
+                <div className="menu-cat-bg">
+                  <Image src={section.image} alt={section.category} fill draggable={false} style={{ objectFit: 'cover', opacity: 0.9 }} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" />
+                </div>
+                <div className="menu-cat-info">
+                  <h3 className="script-font" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--neon-gold)', letterSpacing: '0.5px', textShadow: '2px 2px 4px rgba(0,0,0,0.4)', marginBottom: '0.5rem', lineHeight: '1.2' }}>{section.category}</h3>
+                  <div className="flex items-center gap-2" style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--neon-gold)' }}>
+                    <span>Explore Section</span>
+                    <span style={{ fontSize: '1.1rem' }}>→</span>
                   </div>
-                  <div className="menu-cat-info">
-                    <h3 className="script-font" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--neon-gold)', letterSpacing: '0.5px', textShadow: '2px 2px 4px rgba(0,0,0,0.4)', marginBottom: '0.5rem', lineHeight: '1.2' }}>{section.category}</h3>
-                    <div className="flex items-center gap-2" style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--neon-gold)' }}>
-                      <span>Explore Section</span>
-                      <span style={{ fontSize: '1.1rem' }}>→</span>
-                    </div>
-                  </div>
-                </motion.div>
-              </a>
-            </SwiperSlide>
+                </div>
+              </motion.div>
+            </a>
           ))}
-        </Swiper>
+        </MarqueeCarousel>
       </div>
 
       <style>{`
+        .menu-cat-slide {
+          width: 78vw;
+          flex-shrink: 0;
+        }
+        @media (min-width: 640px) {
+          .menu-cat-slide { width: 42vw; }
+        }
+        @media (min-width: 1024px) {
+          .menu-cat-slide { width: 320px; }
+        }
         .qm-arrow {
           position: absolute;
           top: 50%;
