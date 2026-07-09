@@ -71,7 +71,7 @@ export default function Location() {
             <div className="rustic-section-box" style={{ marginBottom: 0, padding: '2rem' }}>
               <h4 className="anton-font text-secondary" style={{ fontSize: '1.25rem', letterSpacing: '1px', marginBottom: '0.75rem' }}>HOURS</h4>
               <ul className="text-foreground" style={{ fontSize: '1rem', lineHeight: '1.6' }}>
-                <li className="flex justify-between"><span>Tue - Sun</span> <span className="font-bold">5:00 PM - 12:30 AM</span></li>
+                <li className="flex justify-between"><span>Tue - Sun</span> <span className="font-bold">12:00 PM - 1:30 AM</span></li>
                 <li className="flex justify-between"><span>Monday</span> <span className="font-bold text-primary">CLOSED</span></li>
               </ul>
             </div>

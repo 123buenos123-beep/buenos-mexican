@@ -84,8 +84,8 @@ export default function RootLayout({ children }) {
       {
         '@type': 'OpeningHoursSpecification',
         'dayOfWeek': ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-        'opens': '17:00',
-        'closes': '00:30'
+        'opens': '12:00',
+        'closes': '01:30'
       }
     ],
     'menu': 'https://buenosmexicanrestaurant.com/menu',
