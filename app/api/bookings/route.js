@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// booking_attempts is locked to staff by RLS, and this route both logs to it and
+// reads it for rate limiting — so it needs the service_role key. Falls back to
+// the anon key for local dev where service_role may be unset (rate-limit checks
+// then fail open and attempt logging is skipped by RLS).
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Sanitise error strings — never leak raw HTML to the client
 function sanitizeMsg(msg) {
