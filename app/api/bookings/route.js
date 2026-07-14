@@ -87,7 +87,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { name, email, phone, date, time, partySize, website, turnstileToken } = body;
+    const { name, email, phone, date, time, partySize, turnstileToken } = body;
 
     // 1b. Rate Limiting — Layer 2: persistent Supabase check by email
     if (email && await _dbCheck(email)) {
@@ -106,23 +106,6 @@ export async function POST(request) {
           { status: 400 }
         );
       }
-    }
-
-    // 3. Honeypot Validation
-    if (website) {
-      console.warn(`[Bot Blocked] Honeypot filled by IP ${ip}. website = "${website}"`);
-      await supabase.from('booking_attempts').insert([{
-        customer_name: name || 'Bot Attempt',
-        email: email || '',
-        db_status: '❌ Bot Blocked (Honeypot)',
-        realtime_sync: '➖ Skipped',
-        line_notification: '➖ Skipped'
-      }]);
-      return NextResponse.json({
-        success: true,
-        booking_id: 'mock-bot-id-success',
-        table_id: 'mock-bot-table-id'
-      });
     }
 
     // 3. Turnstile Verification

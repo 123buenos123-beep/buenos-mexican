@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
 import { X, Mail, User, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 
 export default function NewsletterModal({ isOpen, onClose }) {
@@ -32,41 +31,26 @@ export default function NewsletterModal({ isOpen, onClose }) {
     setStatus('loading');
 
     try {
-      const { error } = await supabase
-        .from('subscribers')
-        .insert([{ name: formData.name, email: formData.email }]);
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.name, email: formData.email }),
+      });
 
-      if (error) {
-        if (error.code === '23505') { // unique violation
-          await supabase.from('vip_signup_attempts').insert([{
-            email: formData.email,
-            status: '409 Duplicate'
-          }]);
-          setMsg("You're already subscribed!");
-          setStatus('success');
-        } else {
-          await supabase.from('vip_signup_attempts').insert([{
-            email: formData.email,
-            status: `Failed: ${error.message}`
-          }]);
-          throw error;
-        }
-      } else {
-        await supabase.from('vip_signup_attempts').insert([{
-          email: formData.email,
-          status: 'Success'
-        }]);
-        setMsg("Welcome to the Fiesta! You're subscribed.");
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        setMsg(data.status === 'already'
+          ? "You're already subscribed!"
+          : "Welcome to the Fiesta! You're subscribed.");
         setStatus('success');
+      } else {
+        setMsg(data.error || 'Something went wrong. Please try again later.');
+        setStatus('error');
       }
     } catch (err) {
-      console.error("Newsletter Subscription Error:", err.message || JSON.stringify(err));
-      
-      if (err?.code === '42P01' || JSON.stringify(err) === '{}') {
-        setMsg("Database error: Please ensure the '09_integrity_logs.sql' migration has been run in Supabase.");
-      } else {
-        setMsg(err?.message || "Something went wrong. Please try again later.");
-      }
+      console.error('Newsletter Subscription Error:', err?.message || err);
+      setMsg('Something went wrong. Please try again later.');
       setStatus('error');
     }
   };

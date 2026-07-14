@@ -43,7 +43,6 @@ export default function Booking() {
     date: smartDefault.date,
     time: smartDefault.time,
     partySize: '2',
-    website: '' // Honeypot field
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
@@ -235,7 +234,6 @@ export default function Booking() {
           date: formData.date,
           time: formData.time,
           partySize: formData.partySize,
-          website: formData.website,
           turnstileToken: turnstileToken,
         }),
       });
@@ -405,11 +403,6 @@ export default function Booking() {
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit}>
-              {/* Honeypot */}
-              <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
-                <input type="text" name="website" value={formData.website || ''} onChange={handleChange} tabIndex="-1" autoComplete="off" />
-              </div>
-
               {/* ── Personal Details ── */}
               <div style={{ marginBottom: '2rem' }}>
                 {sectionLabel('Personal Details')}

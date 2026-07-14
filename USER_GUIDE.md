@@ -175,7 +175,6 @@ Every booking attempt (successful or not) is logged here with three pipeline ste
 
 Common status values:
 - `✅ 201 Created` — booking saved successfully
-- `❌ Bot Blocked (Honeypot)` — bot was caught and silently rejected
 - `❌ Security Check Failed` — Turnstile CAPTCHA failed
 - `❌ 409 Slot Conflict` — time slot was full
 - `✅ Sent (200 OK)` — LINE notification delivered

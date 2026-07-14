@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS public.vip_signup_attempts (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   email text NOT NULL,
   status text NOT NULL,
+  ip text,
   created_at timestamptz DEFAULT now()
 );
 
@@ -183,12 +184,14 @@ CREATE POLICY "booking_settings_read" ON public.booking_settings FOR SELECT USIN
 CREATE POLICY "booking_settings_write" ON public.booking_settings
   FOR UPDATE USING (auth.role() = 'service_role');
 
--- subscribers: the email list is PII. The public may only INSERT (newsletter
--- signup via NewsletterModal) — they cannot read, update, or delete the list.
--- Staff (admin dashboard, authenticated) manage everything. Server routes that
--- mutate subscribers (unsubscribe, email-webhook bounce handling) use the
--- service_role key, which bypasses RLS.
--- Drop EVERY existing policy first (defensive — clears any legacy policies).
+-- subscribers: the email list is PII. Anon gets NO direct access — public
+-- newsletter signup goes through the /api/newsletter/subscribe server route,
+-- which rate-limits and then inserts with the service_role key (bypasses RLS).
+-- Staff (admin dashboard, authenticated) manage everything; other server routes
+-- that mutate subscribers (unsubscribe, email-webhook bounce handling) also use
+-- the service_role key.
+-- Drop EVERY existing policy first (defensive — clears any legacy policies,
+-- including the retired anon-insert "subscribers_public_signup").
 DO $$
 DECLARE pol record;
 BEGIN
@@ -198,8 +201,6 @@ BEGIN
     EXECUTE format('DROP POLICY IF EXISTS %I ON public.subscribers', pol.policyname);
   END LOOP;
 END $$;
-CREATE POLICY "subscribers_public_signup" ON public.subscribers
-  FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY "subscribers_staff_all" ON public.subscribers
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
@@ -224,11 +225,9 @@ END $$;
 CREATE POLICY "booking_attempts_staff_all" ON public.booking_attempts
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- vip_signup_attempts: the public signup modal (NewsletterModal) logs attempts
--- client-side with the anon key, so anon keeps INSERT — write-only, same shape
--- as subscribers_public_signup. Only staff can read.
-CREATE POLICY "vip_signup_attempts_public_log" ON public.vip_signup_attempts
-  FOR INSERT TO anon WITH CHECK (true);
+-- vip_signup_attempts: signup attempts are now logged server-side by the
+-- /api/newsletter/subscribe route (service_role, bypasses RLS). Anon has no
+-- direct access; only staff can read.
 CREATE POLICY "vip_signup_attempts_staff_all" ON public.vip_signup_attempts
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 

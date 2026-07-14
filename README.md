@@ -23,7 +23,6 @@ A production-grade restaurant reservation and management system for Buenos Mexic
   - [Admin Route Protection (Proxy)](#admin-route-protection-proxy)
   - [Data Access (Row Level Security)](#data-access-row-level-security)
   - [Cloudflare Turnstile](#cloudflare-turnstile)
-  - [Honeypot Field](#honeypot-field)
   - [Rate Limiting (Two-Layer)](#rate-limiting-two-layer)
   - [Monday Closed Day](#monday-closed-day)
   - [Frontend Offline Fallback](#frontend-offline-fallback)
@@ -65,7 +64,6 @@ Customer fills form
       → In-memory rate check (5 req / 30s per IP)
       → Supabase rate check (3 req / 5 min per email)
       → Monday closed-day check
-      → Honeypot validation
       → Cloudflare Turnstile verification
       → create_booking() RPC
           → Daily cap check (max N bookings per day)
@@ -206,7 +204,7 @@ SVG icon links in the shared footer to Facebook, Instagram, and TikTok. Implemen
 Full newsletter management system accessible via the admin dashboard's "Newsletter" tab.
 
 **Subscriber flow:**
-- Customers subscribe via `NewsletterModal` (triggered from navbar VIP button)
+- Customers subscribe via `NewsletterModal` (navbar VIP button) → `POST /api/newsletter/subscribe`, a rate-limited server route (no direct browser insert)
 - Stored in `public.subscribers` with `is_active` flag and `status` field
 - Unsubscribe via a per-email link (`/api/unsubscribe?email=...`); the link's base URL is derived from the request host so it never points at localhost
 
@@ -270,11 +268,15 @@ key, is what actually protects customer data. Policies are defined in
 | Table | anon (public) | authenticated (staff) | service_role (server) |
 |:---|:---|:---|:---|
 | `bookings` | no direct access¹ | full (admin dashboard) | full (bypasses RLS) |
-| `subscribers` | `INSERT` only (signup) | full (admin dashboard) | full (bypasses RLS) |
+| `subscribers` | no direct access² | full (admin dashboard) | full (bypasses RLS) |
 
 ¹ Public reservations are created solely through the `create_booking()`
 `SECURITY DEFINER` RPC, which runs as the function owner and bypasses RLS — so
 anon never needs (or gets) direct access to the `bookings` table.
+
+² Public newsletter signup goes through the `/api/newsletter/subscribe` server
+route (rate-limited, inserts with the `service_role` key). Anon lost its old direct
+`INSERT` on `subscribers`, so bots can't POST to the REST endpoint to flood the list.
 
 **Why the admin dashboard still works with the anon key:** the browser client
 (`lib/supabase.js`) sends the logged-in user's JWT alongside the anon key, so its
@@ -282,16 +284,17 @@ requests run as the `authenticated` role and satisfy the staff policies. A visit
 without a session is plain `anon` and is denied.
 
 **Server routes** that need privileged writes use the `service_role` key
-(`SUPABASE_SERVICE_ROLE_KEY`), which bypasses RLS entirely: `cancel-booking`,
-`unsubscribe`, `admin/booking-settings`, and `email-webhook` (bounce handling).
+(`SUPABASE_SERVICE_ROLE_KEY`), which bypasses RLS entirely: `newsletter/subscribe`,
+`cancel-booking`, `unsubscribe`, `admin/booking-settings`, and `email-webhook`
+(bounce handling).
 
-> **Note:** the logging tables (`booking_attempts`, `vip_signup_attempts`) remain
-> anon-accessible so the public booking route and signup modal can write to them.
-> They contain email/name and are a candidate for the same lockdown next.
+> **Note:** the logging tables (`booking_attempts`, `vip_signup_attempts`) are also
+> locked to staff — they're written server-side with the `service_role` key. No
+> table grants `anon` direct access anymore.
 
-To apply this to an existing database, run
-`supabase/migrations/20260707120000_lock_pii_rls.sql` in the SQL Editor
-(idempotent). A fresh `schema.sql` run already includes it.
+To apply this to an existing database, run the migrations in `supabase/migrations/`
+in order (the latest, `20260715120000_lock_subscribers_public_insert.sql`, moves
+newsletter signup off the anon key). A fresh `schema.sql` run already includes them.
 
 ---
 
@@ -315,12 +318,6 @@ TURNSTILE_SECRET_KEY=             # Private (server-side only)
 ```
 
 > **Test keys** (development only): Site key `1x00000000000000000000AA` / Secret `1x0000000000000000000000000000000AA`
-
----
-
-### Honeypot Field
-
-A hidden `website` input in the booking form, invisible to humans but filled by bots. If the field is non-empty, the server logs the attempt and returns a fake `200 OK` with mock IDs — silently dropping the request without a DB write.
 
 ---
 
@@ -466,9 +463,10 @@ buenos-mexican/
 │   │   └── login/
 │   │       └── page.js           # Admin login page (protected by proxy.js)
 │   ├── api/
-│   │   ├── bookings/route.js     # POST: rate limit → honeypot → Turnstile → RPC
+│   │   ├── bookings/route.js     # POST: rate limit → Turnstile → RPC
 │   │   ├── admin/booking-settings/route.js  # GET/POST: daily cap setting
 │   │   ├── email-webhook/route.js           # Resend delivery event webhook
+│   │   ├── newsletter/subscribe/route.js    # POST: public signup (rate-limited, service_role)
 │   │   ├── newsletter/send/route.js         # Throttled newsletter campaign send
 │   │   └── unsubscribe/route.js            # Tokenized unsubscribe handler
 │   ├── menu/

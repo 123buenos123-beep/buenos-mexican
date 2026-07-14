@@ -74,7 +74,7 @@ Audit log of every booking API call, regardless of outcome.
 | `booking_id` | `uuid` | FK to booking (successful attempts only) |
 | `customer_name` | `text` | — |
 | `email` | `text` | Used by the Supabase rate limiter layer |
-| `db_status` | `text` | e.g. `✅ 201 Created`, `❌ Bot Blocked (Honeypot)` |
+| `db_status` | `text` | e.g. `✅ 201 Created`, `❌ Security Check Failed` |
 | `realtime_sync` | `text` | Pipeline status label |
 | `line_notification` | `text` | Pipeline status label |
 | `created_at` | `timestamptz` | Used for 5-minute rate limit window |
@@ -98,13 +98,15 @@ Viewable in the admin dashboard's **Subscribers** tab (`components/SubscribersAd
 ---
 
 #### `public.vip_signup_attempts`
-Audit log of newsletter signup attempts (parallel to `booking_attempts`).
+Audit log of newsletter signup attempts (parallel to `booking_attempts`). Written
+server-side by `/api/newsletter/subscribe` with the `service_role` key.
 
 | Column | Type | Description |
 |:---|:---|:---|
 | `id` | `uuid` | Primary key |
 | `email` | `text` | — |
-| `status` | `text` | e.g. success, duplicate (409 = already subscribed) |
+| `status` | `text` | e.g. success, duplicate (409 = already subscribed), rate limited |
+| `ip` | `text` | Source IP of the attempt; used by the per-IP rate limiter |
 | `created_at` | `timestamptz` | — |
 
 Shown in the admin System Monitor tab as the "VIP Sign-up Log".
@@ -216,18 +218,18 @@ Every table has RLS enabled. Tables holding customer PII are **locked to authent
 | Table | Policy |
 |:---|:---|
 | `bookings` | **`authenticated` only** (`FOR ALL`). Public reservations are created via the `create_booking` SECURITY DEFINER RPC (bypasses RLS); server routes use the `service_role` key. Anon has no direct access. |
-| `subscribers` | anon may **`INSERT` only** (newsletter signup); `authenticated` full access. Anon cannot read/update/delete the list. |
+| `subscribers` | **`authenticated` only** (`FOR ALL`). Public signup goes through `/api/newsletter/subscribe` (rate-limited, inserts via `service_role`); `unsubscribe`/`email-webhook` also use `service_role`. Anon has no direct access. |
 | `tables` | `SELECT` open to everyone; `INSERT/UPDATE/DELETE` restricted to `authenticated` |
 | `customers` | `authenticated` only, restricted to own row (`auth.uid() = id`) |
 | `booking_settings` | `SELECT` open to everyone; `UPDATE` restricted to `service_role` |
-| `booking_attempts` | Open — `FOR ALL` to `anon, authenticated` (logging; written by the anon booking route) |
-| `vip_signup_attempts` | Open — `FOR ALL` to `anon, authenticated` (logging; written by the anon signup modal) |
-| `email_blasts` | Open — `FOR ALL` to `anon, authenticated` |
-| `email_logs` | Open — `FOR ALL` to `anon, authenticated` |
+| `booking_attempts` | **`authenticated` only** (`FOR ALL`); written by the booking route via `service_role` |
+| `vip_signup_attempts` | **`authenticated` only** (`FOR ALL`); written by `/api/newsletter/subscribe` via `service_role` |
+| `email_blasts` | **`authenticated` only** (`FOR ALL`) |
+| `email_logs` | **`authenticated` only** (`FOR ALL`); Resend webhook writes via `service_role` |
 
-The PII lockdown is applied by `supabase/migrations/20260708120000_lock_pii_rls_v2.sql`, which drops **every** existing policy on `bookings`/`subscribers` by enumerating `pg_policies`, then recreates only the intended ones (a name-agnostic reset — an earlier v1 that dropped policies by name missed a legacy policy and left `bookings` readable). Server routes that write these tables (`email-webhook`, `unsubscribe`, `cancel-booking`, `booking-settings`) use the `service_role` key, which bypasses RLS.
+The PII lockdown is applied by `supabase/migrations/20260708120000_lock_pii_rls_v2.sql`, which drops **every** existing policy on `bookings`/`subscribers` by enumerating `pg_policies`, then recreates only the intended ones (a name-agnostic reset — an earlier v1 that dropped policies by name missed a legacy policy and left `bookings` readable). Server routes that write these tables (`newsletter/subscribe`, `email-webhook`, `unsubscribe`, `cancel-booking`, `booking-settings`) use the `service_role` key, which bypasses RLS.
 
-The logging tables (`booking_attempts`, `vip_signup_attempts`) remain anon-accessible so the public booking route and signup modal can write to them. They contain name/email and are a candidate for the same lockdown.
+The logging tables were later locked to staff by `20260710100000_lock_logging_tables_rls.sql`, and public newsletter signup was moved off the anon key by `20260715120000_lock_subscribers_public_insert.sql` — signups now go through `/api/newsletter/subscribe`, which writes `subscribers` and `vip_signup_attempts` with the `service_role` key after rate limiting. No table now grants `anon` direct access.
 
 ---
 
@@ -279,10 +281,9 @@ Booking submission pipeline:
 1. In-memory rate check: 5 requests / 30s per IP
 2. Supabase rate check: 3 attempts / 5 min per email (queries `booking_attempts`)
 3. Monday closed-day check (returns 400 if `date.getDay() === 1`)
-4. Honeypot check: `website` field must be empty
-5. Cloudflare Turnstile verification
-6. `create_booking` RPC call
-7. Log result to `booking_attempts`
+4. Cloudflare Turnstile verification
+5. `create_booking` RPC call
+6. Log result to `booking_attempts`
 
 ### `GET/PATCH /api/admin/booking-settings`
 
@@ -293,6 +294,18 @@ Read (`GET`) or update (`PATCH`) `max_bookings_per_slot` in `booking_settings`. 
 Customer self-service cancellation, reached via the link in booking emails.
 - **GET**: Renders an HTML confirmation page for the booking `id` in the query string (or an info page if not found / already cancelled / date has passed).
 - **POST**: Updates `status = 'cancelled'`, guarded by `.neq('status', 'cancelled')` so the DB trigger's email-on-status-change doesn't fire twice for an already-cancelled booking. Treats "no row updated" as success so the customer isn't shown a confusing error for a no-op.
+
+### `POST /api/newsletter/subscribe`
+
+Public newsletter signup (from `NewsletterModal`). Replaces the old direct browser
+insert with the anon key, which let bots flood the list by POSTing straight to the
+Supabase REST endpoint. Pipeline:
+
+1. In-memory rate check: 5 signups / 60s per IP
+2. Email format validation (rejects obvious junk before the DB)
+3. Persistent rate check: 20 signups / hour per IP (queries `vip_signup_attempts.ip`)
+4. Insert into `subscribers` via `service_role` (unique violation → `already` = already subscribed)
+5. Log the attempt to `vip_signup_attempts`
 
 ### `POST /api/newsletter/send`
 
