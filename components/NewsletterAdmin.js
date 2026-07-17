@@ -272,6 +272,13 @@ export default function NewsletterAdmin({ isSystemOnline = true }) {
     });
   };
 
+  // Preview: show sample values for personalization tokens so admins see
+  // roughly what a subscriber gets (the API does the real per-recipient swap)
+  const previewHtml = content.replace(
+    /\{\{\s*(name|first_?name|email)\s*(?:\|[^}]*)?\}\}/gi,
+    (_, token) => (token.toLowerCase() === 'email' ? 'maria@example.com' : 'Maria')
+  );
+
   // Helper values for calculations
   const total = selectedCampaign?.total_sent || 0;
   const sent = selectedCampaign?.sent_count || 0;
@@ -524,11 +531,19 @@ export default function NewsletterAdmin({ isSystemOnline = true }) {
                       )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px', gap: '12px', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <ImagePlus size={14} style={{ color: '#B87333', flexShrink: 0 }} />
-                        <span style={{ fontSize: '11px', fontWeight: 500, color: '#9C8577', lineHeight: 1.4 }}>
-                          Click the image icon in the toolbar to insert an image by URL.
-                        </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <ImagePlus size={14} style={{ color: '#B87333', flexShrink: 0 }} />
+                          <span style={{ fontSize: '11px', fontWeight: 500, color: '#9C8577', lineHeight: 1.4 }}>
+                            Click the image icon in the toolbar to insert an image by URL.
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Users size={14} style={{ color: '#B87333', flexShrink: 0 }} />
+                          <span style={{ fontSize: '11px', fontWeight: 500, color: '#9C8577', lineHeight: 1.4 }}>
+                            Personalize with <b>{'{{name}}'}</b> — becomes each subscriber&apos;s name (&quot;amigo&quot; if none). Also: <b>{'{{first_name}}'}</b>, <b>{'{{name|friend}}'}</b> for a custom fallback. Works in the subject too.
+                          </span>
+                        </div>
                       </div>
                       <motion.button
                         type="button"
@@ -628,7 +643,7 @@ export default function NewsletterAdmin({ isSystemOnline = true }) {
                                 wordWrap: 'break-word',
                               }}>
                                 {content ? (
-                                  <div dangerouslySetInnerHTML={{ __html: content }} />
+                                  <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
                                 ) : (
                                   <p style={{ color: '#B09080', fontStyle: 'italic', textAlign: 'center', margin: 0 }}>
                                     Start typing in the editor above to see a live preview...

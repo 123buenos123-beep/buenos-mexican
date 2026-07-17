@@ -29,6 +29,41 @@ function makeImagesResponsive(html) {
   });
 }
 
+// ─── Personalization tokens ─────────────────────────────────────────
+// Supports {{name}}, {{first_name}} and {{email}} in the subject and body,
+// with an optional per-token fallback for subscribers who left no name:
+//   "Hola {{name|friend}}!"  →  "Hola Maria!" / "Hola friend!"
+// Body values are HTML-escaped: subscriber names come from the public
+// signup form, so they must not be able to inject markup into the email.
+const TOKEN_PATTERN = /\{\{\s*(name|first_?name|email)\s*(?:\|\s*([^}]*?)\s*)?\}\}/gi;
+const DEFAULT_NAME_FALLBACK = 'amigo';
+
+const escapeHtml = (value) =>
+  value.replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
+
+function personalize(text, subscriber, { asHtml = true } = {}) {
+  if (!text || !text.includes('{{')) return text; // fast path: no tokens
+  const name = (subscriber.name || '').trim();
+  return text.replace(TOKEN_PATTERN, (_, token, fallback) => {
+    let value;
+    switch (token.toLowerCase()) {
+      case 'email':
+        value = subscriber.email;
+        break;
+      case 'first_name':
+      case 'firstname':
+        value = name.split(/\s+/)[0];
+        break;
+      default: // name
+        value = name;
+    }
+    if (!value) value = fallback !== undefined ? fallback : DEFAULT_NAME_FALLBACK;
+    return asHtml ? escapeHtml(value) : value;
+  });
+}
+
 // ─── Resolve the public site origin for links inside the email ──────
 // Never emit a localhost URL in a real send. Prefer the host the request
 // actually arrived on (correct automatically on the live site), then
@@ -45,12 +80,19 @@ function resolveSiteUrl(request) {
 }
 
 // ─── Branded HTML Email Template ────────────────────────────────────
-function buildEmailHtml(bodyContent, subscriberEmail, siteUrl) {
-  // Normalise all images before injecting into the template
-  const safeBody = makeImagesResponsive(bodyContent);
-  const unsubscribeUrl = `${siteUrl}/api/unsubscribe?email=${encodeURIComponent(subscriberEmail)}`;
+// Factory: does the blast-wide work once (image normalisation, year), then
+// returns a cheap per-subscriber renderer that only swaps in personalization
+// tokens and the unsubscribe link — the image regexes don't re-run for
+// every recipient.
+function createEmailRenderer(bodyContent, siteUrl) {
+  const normalizedBody = makeImagesResponsive(bodyContent);
+  const year = new Date().getFullYear();
 
-  return `<!DOCTYPE html>
+  return function buildEmailHtml(subscriber) {
+    const safeBody = personalize(normalizedBody, subscriber);
+    const unsubscribeUrl = `${siteUrl}/api/unsubscribe?email=${encodeURIComponent(subscriber.email)}`;
+
+    return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="utf-8">
@@ -175,7 +217,7 @@ function buildEmailHtml(bodyContent, subscriberEmail, siteUrl) {
                 <a href="${unsubscribeUrl}" style="color: #B87333; text-decoration: underline; font-weight: 600;">Unsubscribe here</a>
               </p>
               <p style="margin: 10px 0 0; font-size: 10px; color: #C4B5A8;">
-                © ${new Date().getFullYear()} Buenos Mexican Cuisine. All rights reserved.
+                © ${year} Buenos Mexican Cuisine. All rights reserved.
               </p>
             </td>
           </tr>
@@ -189,6 +231,7 @@ function buildEmailHtml(bodyContent, subscriberEmail, siteUrl) {
 
 </body>
 </html>`;
+  };
 }
 
 // ─── Throttle helper: wait N ms ─────────────────────────────────────
@@ -289,6 +332,10 @@ export async function POST(request) {
     // account owner, which is why blasts to other inboxes silently failed.
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'Buenos Mexican <newsletter@buenosmexicanrestaurant.com>';
 
+    // Blast-wide prep happens once here; the loop below only fills in
+    // per-subscriber tokens ({{name}}, {{email}}, …) and the unsubscribe link.
+    const renderEmail = createEmailRenderer(htmlContent, siteUrl);
+
     let totalSentCount = 0;
     let totalFailedCount = 0;
     const emailLogsBatch = [];        // Buffer logs to batch-insert
@@ -298,14 +345,14 @@ export async function POST(request) {
     for (let i = 0; i < subscribers.length; i++) {
       const sub = subscribers[i];
 
-      // Build branded HTML for this subscriber
-      const fullHtml = buildEmailHtml(htmlContent, sub.email, siteUrl);
+      // Build branded, personalized HTML for this subscriber
+      const fullHtml = renderEmail(sub);
 
       try {
         const { data: sendData, error: sendError } = await sendEmailWithRetry({
           from: fromEmail,
           to: [sub.email],
-          subject: subject,
+          subject: personalize(subject, sub, { asHtml: false }),
           html: fullHtml,
         });
 
