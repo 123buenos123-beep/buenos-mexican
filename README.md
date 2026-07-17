@@ -210,6 +210,7 @@ Full newsletter management system accessible via the admin dashboard's "Newslett
 
 **Campaign management (`components/NewsletterAdmin.js`):**
 - Rich text editor (react-quill-new) for composing HTML emails
+- Personalization tokens (`{{name}}`, `{{first_name}}`, `{{email}}`) with per-token fallbacks (e.g. `{{name|friend}}`, default "amigo"), HTML-escaped; the live preview substitutes sample values
 - Throttled batch send via `/api/newsletter/send` — ~1.6 emails/sec (600ms apart) to stay under Resend's 2 req/sec limit, with 429 backoff-retry. Sends from a verified-domain address (`RESEND_FROM_EMAIL`), never the `onboarding@resend.dev` test sender
 - Real-time campaign progress via Supabase Realtime
 - Delivery tracking: `email_blasts` and `email_logs` tables track sent/delivered/bounced per subscriber
@@ -369,7 +370,7 @@ When reconnected:
 ## Local Setup & Environment Variables
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20+ (required by Next.js 16)
 - A Supabase project ([supabase.com](https://supabase.com))
 - Cloudflare Turnstile keys ([dash.cloudflare.com](https://dash.cloudflare.com))
 
@@ -383,7 +384,7 @@ npm install
 
 ### Environment Variables
 
-Create `.env.local` in the project root:
+Copy `.env.example` to `.env.local` and fill in the real values:
 
 ```env
 # Supabase
@@ -509,7 +510,8 @@ buenos-mexican/
 │   ├── backend_specs.md          # Backend architecture reference
 │   └── schema.sql                # Complete database schema (single source of truth)
 ├── proxy.js                      # Next.js 16 proxy — protects /admin/* routes server-side
-├── .env.local                    # Environment variables (not committed)
+├── .env.example                  # Template of required env vars (committed)
+├── .env.local                    # Real env values (not committed)
 ├── jsconfig.json                 # Path aliases (@/ → root)
 └── next.config.mjs               # Next.js config
 ```

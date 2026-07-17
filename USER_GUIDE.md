@@ -127,6 +127,22 @@ The email is sent to **all active subscribers** at a throttled rate (about 1.6 e
 
 > Always preview before sending — you cannot unsend a blast.
 
+### Personalizing Emails
+
+You can automatically insert each subscriber's details into the subject or body using **tokens**. Type them anywhere in the subject line or the editor:
+
+| Type this | Becomes |
+|---|---|
+| `{{name}}` | The subscriber's full name |
+| `{{first_name}}` | Just their first name |
+| `{{email}}` | Their email address |
+
+If someone signed up without a name, `{{name}}` becomes **"amigo"** by default. To set your own fallback word, add it after a `|` — for example `{{name|friend}}` becomes "friend" when no name is on file.
+
+**Example subject:** `¡Hola {{first_name|amigo}}! Your table is waiting 🌮`
+
+The **Email Preview** shows these filled in with sample values (e.g. "Maria"); each subscriber receives their own real values when the blast goes out.
+
 ### Tracking Delivery
 
 After sending, the tab switches to **Tracking & Analytics** automatically.
