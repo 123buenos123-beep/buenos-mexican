@@ -125,7 +125,8 @@ INSERT INTO public.tables (name, capacity) VALUES
   ('Table 3', 4), ('Table 4', 4),
   ('Table 5', 6), ('Table 6', 6),
   ('Window Table 1', 2), ('Window Table 2', 2),
-  ('VIP Booth', 8)
+  ('VIP Booth', 8),
+  ('Large Group', 20)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.booking_settings (id, max_bookings_per_slot)
@@ -285,7 +286,7 @@ CREATE TRIGGER on_booking_created
 
 -- ── create_booking RPC ───────────────────────────────────────
 -- max_bookings_per_slot = daily cap (total bookings per day, not per time slot)
--- When a day hits the cap, suggests available slots on the next 7 days
+-- When a day hits the cap, suggests available slots on the next 7 open days
 
 CREATE OR REPLACE FUNCTION public.create_booking(
   p_name text,
@@ -304,6 +305,8 @@ DECLARE
   v_table_id uuid;
   v_booking_id uuid;
   v_party_int int;
+  v_max_capacity int;
+  v_lookup_party int;
   v_daily_bookings int;
   v_max_bookings int;
 
@@ -329,7 +332,15 @@ BEGIN
   FROM public.booking_settings WHERE id = 1;
   IF v_max_bookings IS NULL THEN v_max_bookings := 5; END IF;
 
-  v_party_int := (regexp_replace(p_party_size, '\D', '', 'g'))::int;
+  v_party_int := COALESCE(NULLIF(regexp_replace(p_party_size, '\D', '', 'g'), '')::int, 1);
+
+  -- Clamp table-capacity lookup to the largest active table so large groups (e.g. 9+, 25+)
+  -- can still reserve online while the exact guest count is stored in bookings.party_size.
+  SELECT MAX(t.capacity) INTO v_max_capacity
+  FROM public.tables t
+  WHERE t.is_active = true;
+
+  v_lookup_party := LEAST(v_party_int, COALESCE(v_max_capacity, v_party_int));
 
   -- Build proximity-sorted time list starting from the requested time
   v_oh_len := array_length(v_operating_hours, 1);
@@ -360,12 +371,13 @@ BEGIN
   FROM public.bookings b
   WHERE b.date = p_date AND b.status != 'cancelled';
 
-  -- Day is full → find available slots on the next 7 days
+  -- Day is full → find available slots on the next 7 open days (skip closed Mondays)
   IF v_daily_bookings >= v_max_bookings THEN
 
-    FOR v_day_offset IN 1..7 LOOP
+    FOR v_day_offset IN 1..8 LOOP
       v_check_date := p_date + v_day_offset;
       EXIT WHEN jsonb_array_length(v_suggested_slots) >= 4;
+      IF EXTRACT(DOW FROM v_check_date) = 1 THEN CONTINUE; END IF;
 
       SELECT COUNT(*) INTO v_day_bookings
       FROM public.bookings b
@@ -379,7 +391,7 @@ BEGIN
           SELECT t.id INTO v_alt_table_id
           FROM public.tables t
           WHERE t.is_active = true
-            AND t.capacity >= v_party_int
+            AND t.capacity >= v_lookup_party
             AND NOT EXISTS (
               SELECT 1 FROM public.bookings b
               WHERE b.table_id = t.id
@@ -412,7 +424,7 @@ BEGIN
   SELECT t.id INTO v_table_id
   FROM public.tables t
   WHERE t.is_active = true
-    AND t.capacity >= v_party_int
+    AND t.capacity >= v_lookup_party
     AND NOT EXISTS (
       SELECT 1 FROM public.bookings b
       WHERE b.table_id = t.id
@@ -435,7 +447,7 @@ BEGIN
       SELECT t.id INTO v_alt_table_id
       FROM public.tables t
       WHERE t.is_active = true
-        AND t.capacity >= v_party_int
+        AND t.capacity >= v_lookup_party
         AND NOT EXISTS (
           SELECT 1 FROM public.bookings b
           WHERE b.table_id = t.id

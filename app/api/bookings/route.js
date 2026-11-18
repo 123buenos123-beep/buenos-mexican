@@ -108,6 +108,16 @@ export async function POST(request) {
       }
     }
 
+    // 2b. Party size validation
+    const partyDigits = String(partySize ?? '').replace(/\D/g, '');
+    const partyInt = parseInt(partyDigits, 10);
+    if (!partyDigits || !Number.isInteger(partyInt) || partyInt < 1 || partyInt > 100) {
+      return NextResponse.json(
+        { error: 'Please enter a valid number of guests (1–100).', message: 'Please enter a valid number of guests (1–100).' },
+        { status: 400 }
+      );
+    }
+
     // 3. Turnstile Verification
     const isHuman = await verifyTurnstile(turnstileToken, ip);
     if (!isHuman) {
@@ -134,7 +144,7 @@ export async function POST(request) {
       p_phone: phone,
       p_date: date,
       p_time: time,
-      p_party_size: partySize,
+      p_party_size: String(partyInt),
     });
 
     if (error || (data && data.error)) {

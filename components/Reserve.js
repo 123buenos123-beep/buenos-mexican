@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import WheelPicker from './WheelPicker';
-import { User, Mail, Phone, CalendarDays, CheckCircle } from 'lucide-react';
+import { User, Users, Mail, Phone, CalendarDays, CheckCircle } from 'lucide-react';
 
 export default function Booking() {
   const getBangkokDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
@@ -44,6 +44,7 @@ export default function Booking() {
     time: smartDefault.time,
     partySize: '2',
   });
+  const [exactPartySize, setExactPartySize] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
   const [errorMsg, setErrorMsg] = useState('');
@@ -172,6 +173,8 @@ export default function Booking() {
   }, [availableTimeOptions]);
 
   const partyOptions = useMemo(() => ['1', '2', '3', '4', '5', '6', '7', '8', '9+'], []);
+  const isLargeParty = formData.partySize === '9+';
+  const effectivePartySize = isLargeParty ? String(Number(exactPartySize)) : formData.partySize;
 
   const formattedConfirmDate = useMemo(() => {
     if (!formData.date) return '';
@@ -196,10 +199,25 @@ export default function Booking() {
       setStatus('error');
       return;
     }
+    if (isLargeParty) {
+      const exactNum = Number(exactPartySize);
+      if (!exactPartySize.trim() || !Number.isInteger(exactNum) || exactNum < 9 || exactNum > 100) {
+        setErrorMsg('Please enter the exact number of guests (between 9 and 100).');
+        setSuggestedSlots([]);
+        setStatus('error');
+        document.getElementById('booking-exact-party')?.focus();
+        return;
+      }
+    }
     if (!turnstileToken) {
       setErrorMsg('Please complete the security check.');
       setStatus('error');
       return;
+    }
+    if (status === 'error') {
+      setStatus('idle');
+      setErrorMsg('');
+      setSuggestedSlots([]);
     }
     setShowConfirmModal(true);
   };
@@ -233,7 +251,7 @@ export default function Booking() {
           phone: formData.phone,
           date: formData.date,
           time: formData.time,
-          partySize: formData.partySize,
+          partySize: effectivePartySize,
           turnstileToken: turnstileToken,
         }),
       });
@@ -397,7 +415,7 @@ export default function Booking() {
               </div>
               <h3 style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--foreground)', marginBottom: '0.5rem', fontFamily: 'var(--font-montserrat)' }}>Booking Confirmed!</h3>
               <p style={{ color: 'var(--text-muted, #888)', fontFamily: 'var(--font-montserrat)' }}>We look forward to hosting you.</p>
-              <button onClick={() => setStatus('idle')} style={{ marginTop: '2rem', color: 'var(--primary)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-montserrat)', fontWeight: 600 }}>
+              <button onClick={() => { setStatus('idle'); setExactPartySize(''); }} style={{ marginTop: '2rem', color: 'var(--primary)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-montserrat)', fontWeight: 600 }}>
                 Make another booking
               </button>
             </motion.div>
@@ -453,6 +471,51 @@ export default function Booking() {
                   <WheelPicker key={`time-${availableTimeOptions.length}-${formData.date}`} label="Time" options={availableTimeOptions} value={formData.time} onChange={(val) => setFormData(prev => ({ ...prev, time: val }))} />
                   <WheelPicker label="Party"       options={partyOptions} value={formData.partySize} onChange={(val) => setFormData(prev => ({ ...prev, partySize: val }))} />
                 </div>
+
+                <AnimatePresence>
+                  {isLargeParty && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                      animate={{ opacity: 1, height: 'auto', marginTop: '1rem' }}
+                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                      transition={{ duration: 0.25 }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <div style={{ background: 'var(--background)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1.5px solid rgba(139,28,28,0.28)' }}>
+                        <label htmlFor="booking-exact-party" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>
+                          Exact Number of Guests (9+)
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <span style={iconStyle}><Users size={16} /></span>
+                          <input
+                            required
+                            id="booking-exact-party"
+                            type="number"
+                            inputMode="numeric"
+                            min={9}
+                            max={100}
+                            step={1}
+                            value={exactPartySize}
+                            onChange={(e) => {
+                              setExactPartySize(e.target.value);
+                              if (status === 'error') {
+                                setStatus('idle');
+                                setErrorMsg('');
+                              }
+                            }}
+                            placeholder="Enter exact guest count (e.g. 10, 12, 15)"
+                            style={inputBase}
+                            onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(139,28,28,0.1)'; }}
+                            onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
+                          />
+                        </div>
+                        <p style={{ marginTop: '6px', fontSize: '0.75rem', color: 'var(--text-muted, #888)', fontWeight: 500, fontFamily: 'var(--font-montserrat)' }}>
+                          Please confirm how many guests are in your group (9–100) so we can prepare your tables.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* ── Error ── */}
@@ -576,7 +639,7 @@ export default function Booking() {
                 {[
                   { label: 'Date', value: formattedConfirmDate },
                   { label: 'Time', value: formData.time },
-                  { label: 'Party Size', value: `${formData.partySize} guests` },
+                  { label: 'Party Size', value: `${effectivePartySize} guests` },
                 ].map((row, i, arr) => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', paddingBottom: i < arr.length - 1 ? '0.75rem' : 0, marginBottom: i < arr.length - 1 ? '0.75rem' : 0, borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <span style={{ color: '#888', fontFamily: 'var(--font-montserrat)', fontWeight: 500 }}>{row.label}</span>

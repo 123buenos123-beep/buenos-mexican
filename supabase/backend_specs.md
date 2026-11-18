@@ -27,7 +27,7 @@ Physical restaurant tables available for assignment.
 | `is_active` | `boolean` | Whether table is in service |
 | `created_at` | `timestamptz` | — |
 
-Seeded with 9 tables: two 2-tops, two more 2-tops (window), two 4-tops, two 6-tops, and one 8-top VIP booth.
+Seeded with 10 tables: two 2-tops, two more 2-tops (window), two 4-tops, two 6-tops, one 8-top VIP booth, and one 20-top Large Group table.
 
 ---
 
@@ -167,13 +167,13 @@ create_booking(
 ### Logic
 
 1. Read `max_bookings_per_slot` from `booking_settings` (default `5` if the row is missing).
-2. Parse party size integer from `p_party_size` string.
+2. Parse party size integer from `p_party_size` string (`v_party_int`), and compute `v_lookup_party = LEAST(v_party_int, MAX(active table capacity))` so `9+` / large-party bookings (e.g. `12`, `25`, up to `100`) still match the largest available table while preserving the exact `p_party_size` on the inserted booking row.
 3. Pre-compute a proximity-sorted time array starting from `p_time` (later times first, then earlier, alternating outward) — reused for building suggestion lists.
 4. Count total non-cancelled bookings for `p_date`.
-5. **If daily cap reached** → scan the next 7 days. For each day under cap, iterate the proximity-sorted times looking for a table with `capacity >= party_size` **and no conflicting booking at that exact date/time**. Return up to 4 `{date, time}` suggestions as `suggested_slots`.
-6. **If cap not reached** → find the smallest available table (`capacity >= party_size`, no conflicting booking at the requested date/time) using `FOR UPDATE SKIP LOCKED`.
+5. **If daily cap reached** → scan the next 8 calendar days (skipping closed Mondays via `EXTRACT(DOW FROM v_check_date) = 1`). For each open day under cap, iterate the proximity-sorted times looking for a table with `capacity >= v_lookup_party` **and no conflicting booking at that exact date/time**. Return up to 4 `{date, time}` suggestions as `suggested_slots`.
+6. **If cap not reached** → find the smallest available table (`capacity >= v_lookup_party`, no conflicting booking at the requested date/time) using `FOR UPDATE SKIP LOCKED`.
 7. **If no table found at requested time** → suggest nearby times on the same day (same proximity sort, same conflict-checked search — never suggests a slot that's actually taken).
-8. **If table found** → `INSERT` booking, return `{success, booking_id, table_id}`.
+8. **If table found** → `INSERT` booking with exact `p_party_size`, return `{success, booking_id, table_id}`.
 
 There is intentionally **no fallback that ignores the availability check** — every table lookup (the real booking, and both suggestion builders) requires the table to be genuinely free at that date/time. An earlier version of this function had a fallback that dropped the conflict check when the ideal query returned nothing, which could silently double-book a table; that's been removed. The partial unique index on `bookings(table_id, date, time)` (excluding cancelled rows) is the last line of defense if a race still slips through.
 
