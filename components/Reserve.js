@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import WheelPicker from './WheelPicker';
-import { User, Users, Mail, Phone, CalendarDays, CheckCircle, ChevronDown } from 'lucide-react';
+import { User, Users, Mail, Phone, CalendarDays, CheckCircle } from 'lucide-react';
 
 export default function Booking() {
   const getBangkokDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
@@ -491,60 +491,51 @@ export default function Booking() {
                       style={{ overflow: 'hidden' }}
                     >
                       <div style={{ background: 'var(--background)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1.5px solid rgba(139,28,28,0.28)' }}>
-                        <label htmlFor="booking-exact-party" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>
-                          Select Exact Number of Guests (9–30)
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '10px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>
+                          <Users size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: '6px', color: 'rgba(139,28,28,0.6)' }} />
+                          How many guests?
                         </label>
-                        <div style={{ position: 'relative' }}>
-                          <span style={iconStyle}><Users size={16} /></span>
-                          <select
-                            required
-                            id="booking-exact-party"
-                            value={exactPartySize}
-                            onChange={(e) => {
-                              setExactPartySize(e.target.value);
-                              if (status === 'error') {
-                                setStatus('idle');
-                                setErrorMsg('');
-                              }
-                            }}
-                            style={{
-                              ...inputBase,
-                              appearance: 'none',
-                              WebkitAppearance: 'none',
-                              MozAppearance: 'none',
-                              paddingRight: '42px',
-                              cursor: 'pointer',
-                              color: exactPartySize ? 'var(--foreground)' : '#888',
-                            }}
-                            onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(139,28,28,0.1)'; }}
-                            onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
-                          >
-                            <option value="" disabled style={{ color: '#888' }}>
-                              Select exact number of guests (9–30)...
-                            </option>
-                            {largePartyOptions.map((num) => (
-                              <option key={num} value={String(num)} style={{ color: '#111' }}>
-                                {num} guests
-                              </option>
-                            ))}
-                          </select>
-                          <span
-                            style={{
-                              position: 'absolute',
-                              right: '14px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              pointerEvents: 'none',
-                              color: 'rgba(139,28,28,0.6)',
-                              display: 'flex',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <ChevronDown size={18} />
-                          </span>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {largePartyOptions.map((num) => {
+                            const isSelected = exactPartySize === String(num);
+                            return (
+                              <button
+                                key={num}
+                                type="button"
+                                onClick={() => {
+                                  setExactPartySize(String(num));
+                                  if (status === 'error') {
+                                    setStatus('idle');
+                                    setErrorMsg('');
+                                  }
+                                }}
+                                style={{
+                                  minWidth: '72px',
+                                  padding: '10px 14px',
+                                  fontSize: '0.9rem',
+                                  fontWeight: isSelected ? 800 : 600,
+                                  fontFamily: 'var(--font-montserrat)',
+                                  color: isSelected ? '#FDF8F0' : '#8B1C1C',
+                                  background: isSelected
+                                    ? 'linear-gradient(135deg, #8B1C1C 0%, #5C1111 100%)'
+                                    : 'rgba(139,28,28,0.06)',
+                                  border: isSelected
+                                    ? '1.5px solid #8B1C1C'
+                                    : '1.5px solid rgba(139,28,28,0.2)',
+                                  borderRadius: '50px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease',
+                                  boxShadow: isSelected ? '0 3px 12px rgba(139,28,28,0.3)' : 'none',
+                                  transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                                }}
+                              >
+                                {num}
+                              </button>
+                            );
+                          })}
                         </div>
-                        <p style={{ marginTop: '6px', fontSize: '0.75rem', color: 'var(--text-muted, #888)', fontWeight: 500, fontFamily: 'var(--font-montserrat)' }}>
-                          Please select your party size (9–30 guests) so our team can prepare the best seating arrangement.
+                        <p style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted, #888)', fontWeight: 500, fontFamily: 'var(--font-montserrat)' }}>
+                          Tap your group size so we can prepare the best seating. 🍽️
                         </p>
                       </div>
                     </motion.div>
