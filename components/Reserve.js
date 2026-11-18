@@ -175,8 +175,7 @@ export default function Booking() {
   const partyOptions = useMemo(() => ['1', '2', '3', '4', '5', '6', '7', '8', '9+'], []);
   const largePartyOptions = useMemo(() => {
     const list = [];
-    for (let i = 9; i <= 50; i++) list.push(i);
-    [55, 60, 65, 70, 75, 80, 85, 90, 95, 100].forEach(n => list.push(n));
+    for (let i = 9; i <= 30; i++) list.push(i);
     return list;
   }, []);
   const isLargeParty = formData.partySize === '9+';
@@ -207,8 +206,8 @@ export default function Booking() {
     }
     if (isLargeParty) {
       const exactNum = Number(exactPartySize);
-      if (!exactPartySize || !Number.isInteger(exactNum) || exactNum < 9 || exactNum > 100) {
-        setErrorMsg('Please select the exact number of guests from the dropdown.');
+      if (!exactPartySize || !Number.isInteger(exactNum) || exactNum < 9 || exactNum > 30) {
+        setErrorMsg('Please select your party size (between 9 and 30 guests) from the dropdown.');
         setSuggestedSlots([]);
         setStatus('error');
         document.getElementById('booking-exact-party')?.focus();
@@ -497,7 +496,7 @@ export default function Booking() {
                     >
                       <div style={{ background: 'var(--background)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1.5px solid rgba(139,28,28,0.28)' }}>
                         <label htmlFor="booking-exact-party" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>
-                          Select Exact Number of Guests (9+)
+                          Select Exact Number of Guests (9–30)
                         </label>
                         <div style={{ position: 'relative' }}>
                           <span style={iconStyle}><Users size={16} /></span>
@@ -525,7 +524,7 @@ export default function Booking() {
                             onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
                           >
                             <option value="" disabled style={{ color: '#888' }}>
-                              Select exact number of guests...
+                              Select exact number of guests (9–30)...
                             </option>
                             {largePartyOptions.map((num) => (
                               <option key={num} value={String(num)} style={{ color: '#111' }}>
@@ -549,7 +548,7 @@ export default function Booking() {
                           </span>
                         </div>
                         <p style={{ marginTop: '6px', fontSize: '0.75rem', color: 'var(--text-muted, #888)', fontWeight: 500, fontFamily: 'var(--font-montserrat)' }}>
-                          Please select your exact party size from the list so our team can prepare the best seating arrangement.
+                          Please select your party size (9–30 guests) so our team can prepare the best seating arrangement.
                         </p>
                       </div>
                     </motion.div>

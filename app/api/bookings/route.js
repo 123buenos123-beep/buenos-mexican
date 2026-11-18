@@ -111,9 +111,9 @@ export async function POST(request) {
     // 2b. Party size validation
     const partyDigits = String(partySize ?? '').replace(/\D/g, '');
     const partyInt = parseInt(partyDigits, 10);
-    if (!partyDigits || !Number.isInteger(partyInt) || partyInt < 1 || partyInt > 100) {
+    if (!partyDigits || !Number.isInteger(partyInt) || partyInt < 1 || partyInt > 30) {
       return NextResponse.json(
-        { error: 'Please enter a valid number of guests (1–100).', message: 'Please enter a valid number of guests (1–100).' },
+        { error: 'Please enter a valid number of guests (1–30).', message: 'Please enter a valid number of guests (1–30).' },
         { status: 400 }
       );
     }
