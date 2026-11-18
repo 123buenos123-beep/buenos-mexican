@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import WheelPicker from './WheelPicker';
-import { User, Users, Mail, Phone, CalendarDays, CheckCircle } from 'lucide-react';
+import { User, Users, Mail, Phone, CalendarDays, CheckCircle, ChevronDown } from 'lucide-react';
 
 export default function Booking() {
   const getBangkokDate = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date());
@@ -173,6 +173,12 @@ export default function Booking() {
   }, [availableTimeOptions]);
 
   const partyOptions = useMemo(() => ['1', '2', '3', '4', '5', '6', '7', '8', '9+'], []);
+  const largePartyOptions = useMemo(() => {
+    const list = [];
+    for (let i = 9; i <= 50; i++) list.push(i);
+    [55, 60, 65, 70, 75, 80, 85, 90, 95, 100].forEach(n => list.push(n));
+    return list;
+  }, []);
   const isLargeParty = formData.partySize === '9+';
   const effectivePartySize = isLargeParty ? String(Number(exactPartySize)) : formData.partySize;
 
@@ -201,8 +207,8 @@ export default function Booking() {
     }
     if (isLargeParty) {
       const exactNum = Number(exactPartySize);
-      if (!exactPartySize.trim() || !Number.isInteger(exactNum) || exactNum < 9 || exactNum > 100) {
-        setErrorMsg('Please enter the exact number of guests (between 9 and 100).');
+      if (!exactPartySize || !Number.isInteger(exactNum) || exactNum < 9 || exactNum > 100) {
+        setErrorMsg('Please select the exact number of guests from the dropdown.');
         setSuggestedSlots([]);
         setStatus('error');
         document.getElementById('booking-exact-party')?.focus();
@@ -469,7 +475,15 @@ export default function Booking() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', background: 'var(--background)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
                   <WheelPicker label="Select Date" options={dateOptions} value={formData.date} onChange={(val) => setFormData(prev => ({ ...prev, date: val }))} />
                   <WheelPicker key={`time-${availableTimeOptions.length}-${formData.date}`} label="Time" options={availableTimeOptions} value={formData.time} onChange={(val) => setFormData(prev => ({ ...prev, time: val }))} />
-                  <WheelPicker label="Party"       options={partyOptions} value={formData.partySize} onChange={(val) => setFormData(prev => ({ ...prev, partySize: val }))} />
+                  <WheelPicker
+                    label="Party"
+                    options={partyOptions}
+                    value={formData.partySize}
+                    onChange={(val) => {
+                      setFormData(prev => ({ ...prev, partySize: val }));
+                      if (val !== '9+') setExactPartySize('');
+                    }}
+                  />
                 </div>
 
                 <AnimatePresence>
@@ -483,18 +497,13 @@ export default function Booking() {
                     >
                       <div style={{ background: 'var(--background)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1.5px solid rgba(139,28,28,0.28)' }}>
                         <label htmlFor="booking-exact-party" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--foreground)', marginBottom: '6px', fontFamily: 'var(--font-montserrat)', letterSpacing: '0.04em' }}>
-                          Exact Number of Guests (9+)
+                          Select Exact Number of Guests (9+)
                         </label>
                         <div style={{ position: 'relative' }}>
                           <span style={iconStyle}><Users size={16} /></span>
-                          <input
+                          <select
                             required
                             id="booking-exact-party"
-                            type="number"
-                            inputMode="numeric"
-                            min={9}
-                            max={100}
-                            step={1}
                             value={exactPartySize}
                             onChange={(e) => {
                               setExactPartySize(e.target.value);
@@ -503,14 +512,44 @@ export default function Booking() {
                                 setErrorMsg('');
                               }
                             }}
-                            placeholder="Enter exact guest count (e.g. 10, 12, 15)"
-                            style={inputBase}
+                            style={{
+                              ...inputBase,
+                              appearance: 'none',
+                              WebkitAppearance: 'none',
+                              MozAppearance: 'none',
+                              paddingRight: '42px',
+                              cursor: 'pointer',
+                              color: exactPartySize ? 'var(--foreground)' : '#888',
+                            }}
                             onFocus={e => { e.target.style.borderColor = 'var(--primary)'; e.target.style.boxShadow = '0 0 0 3px rgba(139,28,28,0.1)'; }}
                             onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; }}
-                          />
+                          >
+                            <option value="" disabled style={{ color: '#888' }}>
+                              Select exact number of guests...
+                            </option>
+                            {largePartyOptions.map((num) => (
+                              <option key={num} value={String(num)} style={{ color: '#111' }}>
+                                {num} guests
+                              </option>
+                            ))}
+                          </select>
+                          <span
+                            style={{
+                              position: 'absolute',
+                              right: '14px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              pointerEvents: 'none',
+                              color: 'rgba(139,28,28,0.6)',
+                              display: 'flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <ChevronDown size={18} />
+                          </span>
                         </div>
                         <p style={{ marginTop: '6px', fontSize: '0.75rem', color: 'var(--text-muted, #888)', fontWeight: 500, fontFamily: 'var(--font-montserrat)' }}>
-                          Please confirm how many guests are in your group (9–100) so we can prepare your tables.
+                          Please select your exact party size from the list so our team can prepare the best seating arrangement.
                         </p>
                       </div>
                     </motion.div>
