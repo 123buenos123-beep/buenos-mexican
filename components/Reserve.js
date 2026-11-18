@@ -173,11 +173,7 @@ export default function Booking() {
   }, [availableTimeOptions]);
 
   const partyOptions = useMemo(() => ['1', '2', '3', '4', '5', '6', '7', '8', '9+'], []);
-  const largePartyOptions = useMemo(() => {
-    const list = [];
-    for (let i = 9; i <= 30; i++) list.push(i);
-    return list;
-  }, []);
+  const largePartyOptions = useMemo(() => [10, 12, 15, 18, 20, 25, 30], []);
   const isLargeParty = formData.partySize === '9+';
   const effectivePartySize = isLargeParty ? String(Number(exactPartySize)) : formData.partySize;
 
